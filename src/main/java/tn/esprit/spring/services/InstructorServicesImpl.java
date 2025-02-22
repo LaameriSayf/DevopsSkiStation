@@ -18,6 +18,10 @@ public class InstructorServicesImpl implements IInstructorServices{
     private IInstructorRepository instructorRepository;
     private ICourseRepository courseRepository;
 
+    public InstructorServicesImpl() {
+
+    }
+
     @Override
     public Instructor addInstructor(Instructor instructor) {
         return instructorRepository.save(instructor);
@@ -41,11 +45,23 @@ public class InstructorServicesImpl implements IInstructorServices{
     @Override
     public Instructor addInstructorAndAssignToCourse(Instructor instructor, Long numCourse) {
         Course course = courseRepository.findById(numCourse).orElse(null);
-        Set<Course> courseSet = new HashSet<>();
-        courseSet.add(course);
-        instructor.setCourses(courseSet);
+
+        if (course == null) {
+            throw new IllegalArgumentException("Le cours avec l'ID " + numCourse + " n'existe pas !");
+        }
+
+        // 🔥 Vérifier si la liste des cours est déjà initialisée
+        if (instructor.getCourses() == null) {
+            instructor.setCourses(new HashSet<>());
+        }
+
+        // ✅ Ajouter le cours au lieu d'écraser la liste
+        instructor.getCourses().add(course);
+
+        // ✅ Sauvegarder l'instructeur avec le nouveau cours ajouté
         return instructorRepository.save(instructor);
     }
+
 
 
 }
