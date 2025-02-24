@@ -9,11 +9,15 @@ public interface ICourseServices {
 
     List<Course> retrieveAllCourses();
 
-    Course  addCourse(Course  course);
+    Course addCourse(Course course);
 
     Course updateCourse(Course course);
 
     Course retrieveCourse(Long numCourse);
 
+    List<Course> filterCoursesByLevel(int level);
 
+    List<Course> searchCoursesByType(TypeCourse typeCourse);
+
+    Float calculateTotalPrice(List<Course> courses);
 }
