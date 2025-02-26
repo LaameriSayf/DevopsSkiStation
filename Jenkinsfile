@@ -1,8 +1,10 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
+                // Checkout the code from the repository
                 git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
@@ -16,16 +18,14 @@ pipeline {
             }
         }
 
-       stage('Test') {
-           steps {
-               // Skip tests
-               echo 'Skipping tests...'
-               script {
-                   sh 'mvn test -DskipTests'
-               }
-           }
-       }
-
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
 
         stage('Deploy') {
             steps {
