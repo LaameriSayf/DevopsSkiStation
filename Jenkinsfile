@@ -16,7 +16,8 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    bat 'mvn clean compile'
+                    // Use mvn to clean and compile
+                    sh 'mvn clean compile'
                 }
             }
         }
@@ -24,7 +25,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    bat "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                    // Use mvn to trigger SonarQube analysis
+                    sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
         }
@@ -32,7 +34,8 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    bat 'mvn test -e -X'
+                    // Use mvn to run tests
+                    sh 'mvn test -e -X'
                 }
             }
         }
@@ -43,7 +46,8 @@ pipeline {
                     script {
                         def settingsXmlPath = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
 
-                        bat """
+                        // Use mvn to deploy with specified settings
+                        sh """
                             mvn deploy --settings ${settingsXmlPath} ^
                             -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation ^
                             -Dusername=MahmoudAbdulkareem ^
