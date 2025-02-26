@@ -15,19 +15,20 @@ pipeline {
                 }
             }
         }
-        stage('maven build') {
-            steps {
-                script {
-                    sh 'mvn clean install'
+         stage(' maven build ') {
+                    steps{
+                        script {
+                            sh 'mvn clean install'
+                        }
+                    }
+
                 }
-            }
-        }
-        stage('test') {
-            steps {
-                script {
-                    sh 'mvn test'
-                }
-            }
-        }
+                 stage('test') {
+                            steps {
+                                script {
+                                    sh 'mvn test'
+                                }
+                            }
+                        }
     }
 }
