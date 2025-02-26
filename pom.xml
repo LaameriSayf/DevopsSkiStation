@@ -83,12 +83,7 @@
 			<artifactId>junit-jupiter-api</artifactId>
 			<version>5.7.0</version> <!-- Ensure version consistency -->
 		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.7.0</version> <!-- Ensure version consistency -->
-			<scope>test</scope>
-		</dependency>
+
 
 		<!-- Mockito Dependencies (ensure only one declaration for each) -->
 		<dependency>
@@ -143,12 +138,6 @@
 		<repository>
 			<id>github-repository</id> <!-- This must match the id in settings.xml -->
 			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url> <!-- GitHub Package URL -->
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
 		</repository>
 	</distributionManagement>
 

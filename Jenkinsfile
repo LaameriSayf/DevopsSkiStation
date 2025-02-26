@@ -12,7 +12,7 @@ pipeline {
             steps {
                 echo 'Compiling the project...'
                 script {
-                sh 'mvn clean install'
+                    sh 'mvn clean compile'
                 }
             }
         }
@@ -26,7 +26,14 @@ pipeline {
             }
         }
 
-
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the project...'
+                script {
+                    sh 'mvn deploy -DskipTests'
+                }
+            }
+        }
     }
 
     post {
