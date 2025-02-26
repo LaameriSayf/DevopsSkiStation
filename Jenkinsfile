@@ -7,7 +7,7 @@ pipeline {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '*/Sayf']],  // Correction ici
+                        branches: [[name: 'origin/Sayf']],  // Correction ici
                         userRemoteConfigs: [[
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                         ]]
