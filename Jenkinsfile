@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
         SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
-        MAVEN_SETTINGS = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'  // Correct path for Windows
+        MAVEN_SETTINGS = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
+                    bat 'mvn clean compile' // Use 'bat' instead of 'sh' for Windows
                 }
             }
         }
@@ -25,7 +25,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    sh 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}'
+                    bat 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}' // Windows specific
                 }
             }
         }
@@ -33,7 +33,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'mvn test -e -X'
+                    bat 'mvn test -e -X' // Windows shell command
                 }
             }
         }
@@ -44,12 +44,12 @@ pipeline {
                     script {
                         def settingsXmlPath = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
 
-                        // Using 'withCredentials' securely without interpolation
-                        sh """
-                            mvn deploy --settings ${settingsXmlPath} \
-                            -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
-                            -Dusername=MahmoudAbdulkareem \
-                            -Dpassword=\${GITHUB_PASSWORD}
+                        // Ensure the correct shell (bat) is used for Windows
+                        bat """
+                            mvn deploy --settings ${settingsXmlPath} ^
+                            -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation ^
+                            -Dusername=MahmoudAbdulkareem ^
+                            -Dpassword=%GITHUB_PASSWORD%
                         """
                     }
                 }
