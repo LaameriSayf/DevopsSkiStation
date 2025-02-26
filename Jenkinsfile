@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-    environment {
-        SONARQUBE_SERVER = 'sonar'
-    }
+     tools {
+            sonar 'sonar'
+        }
 
     stages {
         stage('Checkout') {
@@ -26,7 +26,7 @@ pipeline {
                 echo 'Running SonarQube analysis...'
                 script {
                     withSonarQubeEnv('SonarQube') {
-                        sh 'mvn sonar:sonar'
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=squ_377a618e5e81fe20dbf2c375969455a0fefb5eeb -Dsonar.host.url=http://192.168.33.10:9000'
                     }
                 }
             }
