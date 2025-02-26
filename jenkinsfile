@@ -24,8 +24,8 @@ pipeline {
                     sh '''
                     echo "Vérification de Docker..."
                     whoami
-                    sudo docker version
-                    sudo docker ps
+                    docker version
+                    docker ps
                     '''
                 }
             }
@@ -36,21 +36,21 @@ pipeline {
                 script {
                     sh '''
                     echo "Vérification de Docker..."
-                    if ! sudo command -v docker &> /dev/null; then
+                    if ! command -v docker &> /dev/null; then
                         echo "Erreur : Docker n'est pas installé ou accessible !"
                         exit 1
                     fi
 
-                    if [ $(sudo docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
-                        if [ $(sudo docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                    if [ $(docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
+                        if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
                             echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                            sudo docker start $MYSQL_CONTAINER
+                            docker start $MYSQL_CONTAINER
                         fi
                     else
                         echo "Démarrage de MySQL..."
-                        sudo docker run --name $MYSQL_CONTAINER \
+                        docker run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
@@ -60,7 +60,7 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    sudo docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
