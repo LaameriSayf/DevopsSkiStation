@@ -25,7 +25,7 @@ public class CourseServicesTest {
     private ICourseRepository courseRepository;
 
     @InjectMocks
-    private CourseServicesImpl courseServicesImpl; // Fixed: Using the correct service class
+    private CourseServicesImpl courseServicesImpl;
 
     private Course course;
 
@@ -35,7 +35,7 @@ public class CourseServicesTest {
         course.setNumCourse(1L);
         course.setLevel(2);
         course.setTypeCourse(TypeCourse.COLLECTIVE_CHILDREN);
-        course.setSupport(Support.SKI); // Fixed: Using enum instead of String
+        course.setSupport(Support.SKI);
         course.setPrice(100.0f);
         course.setTimeSlot(10);
     }
@@ -44,7 +44,7 @@ public class CourseServicesTest {
     public void testAddCourse() {
         when(courseRepository.save(course)).thenReturn(course);
 
-        Course savedCourse = courseServicesImpl.addCourse(course); // Fixed method call
+        Course savedCourse = courseServicesImpl.addCourse(course);
 
         assertNotNull(savedCourse);
         assertEquals(course.getNumCourse(), savedCourse.getNumCourse());
@@ -58,7 +58,7 @@ public class CourseServicesTest {
 
         when(courseRepository.findAll()).thenReturn(Arrays.asList(course, course1, course2));
 
-        List<Course> courses = courseServicesImpl.retrieveAllCourses(); // Fixed method call
+        List<Course> courses = courseServicesImpl.retrieveAllCourses();
 
         assertEquals(3, courses.size());
         verify(courseRepository, times(1)).findAll();
@@ -70,7 +70,7 @@ public class CourseServicesTest {
 
         when(courseRepository.save(updatedCourse)).thenReturn(updatedCourse);
 
-        Course savedCourse = courseServicesImpl.updateCourse(updatedCourse); // Fixed method call
+        Course savedCourse = courseServicesImpl.updateCourse(updatedCourse);
 
         assertEquals(3, savedCourse.getLevel());
         assertEquals(120.0f, savedCourse.getPrice());
@@ -81,7 +81,7 @@ public class CourseServicesTest {
     public void testRetrieveCourse() {
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
-        Course retrievedCourse = courseServicesImpl.retrieveCourse(1L); // Fixed method call
+        Course retrievedCourse = courseServicesImpl.retrieveCourse(1L);
 
         assertNotNull(retrievedCourse);
         assertEquals(course.getNumCourse(), retrievedCourse.getNumCourse());
@@ -93,7 +93,7 @@ public class CourseServicesTest {
         Course course1 = new Course(2L, 2, TypeCourse.COLLECTIVE_CHILDREN, Support.SNOWBOARD, 100.0f, 11, null);
         when(courseRepository.findByLevel(2)).thenReturn(Arrays.asList(course, course1));
 
-        List<Course> filteredCourses = courseServicesImpl.filterCoursesByLevel(2); // Fixed method call
+        List<Course> filteredCourses = courseServicesImpl.filterCoursesByLevel(2);
 
         assertEquals(2, filteredCourses.size());
         verify(courseRepository, times(1)).findByLevel(2);
@@ -114,7 +114,6 @@ public class CourseServicesTest {
     public void testCalculateTotalPrice() {
         Course course1 = new Course(2L, 1, TypeCourse.INDIVIDUAL, Support.SNOWBOARD, 150.0f, 11, null);
 
-        // No need for stubbing courseRepository.findAll() if it's not used in the method
 
         Float totalPrice = courseServicesImpl.calculateTotalPrice(Arrays.asList(course, course1)); // Fixed method call
 

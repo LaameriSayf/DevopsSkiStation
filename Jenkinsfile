@@ -2,54 +2,51 @@ pipeline {
     agent any
 
     environment {
-        MAVEN_HOME = tool name: 'M3', type: 'Maven'
-        JAVA_HOME = tool name: 'JDK 17', type: 'JDK'
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
+        MAVEN_HOME = 'C:\\Maven'
+        PATH = "${JAVA_HOME}\\bin;${MAVEN_HOME}\\bin;${env.PATH}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from your GitHub repository
+                // Checkout the code from the repository
                 git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
 
         stage('Build') {
             steps {
-                // Compile the project using Maven
+                echo 'Building the project...'
                 script {
-                    echo 'Building the project...'
-                    sh "'${MAVEN_HOME}/bin/mvn' clean install"
+                    sh 'mvn clean install'
                 }
             }
         }
 
         stage('Test') {
             steps {
-                // Run the unit tests using Maven
+                echo 'Running tests...'
                 script {
-                    echo 'Running tests...'
-                    sh "'${MAVEN_HOME}/bin/mvn' test"
+                    sh 'mvn test'
                 }
             }
         }
 
         stage('Package') {
             steps {
-                // Package the project (e.g., creating a JAR, WAR file)
+                echo 'Packaging the project...'
                 script {
-                    echo 'Packaging the project...'
-                    sh "'${MAVEN_HOME}/bin/mvn' package"
+                    sh 'mvn package'
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                // Deploy the project (e.g., deploy to a server or repository)
+                echo 'Deploying the project...'
                 script {
-                    echo 'Deploying the project...'
-                    sh "'${MAVEN_HOME}/bin/mvn' deploy -DskipTests"
+                    sh 'mvn deploy -DskipTests'
                 }
             }
         }
@@ -57,7 +54,7 @@ pipeline {
 
     post {
         success {
-            echo 'Build and deployment successful!'
+            echo 'Build and deployment were successful!'
         }
 
         failure {
@@ -65,7 +62,7 @@ pipeline {
         }
 
         always {
-            cleanWs()  // Clean workspace after build
+            cleanWs()  
         }
     }
 }
