@@ -22,6 +22,7 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    set -e
                     echo "Vérification de Docker..."
                     whoami
                     docker version
@@ -35,14 +36,15 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    set -e
                     echo "Vérification de Docker..."
                     if ! command -v docker &> /dev/null; then
                         echo "Erreur : Docker n'est pas installé ou accessible !"
                         exit 1
                     fi
 
-                    if [ $(docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
-                        if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                    if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
                             echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
@@ -60,7 +62,10 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "MySQL n'a pas démarré !" 
+                        exit 1
+                    fi
                     '''
                 }
             }
