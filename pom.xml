@@ -12,8 +12,8 @@
 
 	<groupId>tn.esprit.spring</groupId>
 	<artifactId>gestion-course</artifactId>
-	<version>1.2</version>
-	<name>gestion-station-ski</name>
+	<version>1.3</version>
+	<name>gestion-station</name>
 
 	<properties>
 		<java.version>1.8</java.version>
