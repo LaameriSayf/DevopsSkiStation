@@ -42,22 +42,15 @@ pipeline {
 
         stage('Deploy') {
             steps {
-              withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                  script {
-                      def settingsXmlPath = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
-                      // Use the GITHUB_TOKEN from Jenkins credentials instead of hardcoded password
-                      sh """
-                          mvn deploy --settings ${settingsXmlPath} \
-                          -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
-                          -Dusername=MahmoudAbdulkareem \
-                          -Dpassword=${GITHUB_TOKEN}
-                      """
-                  
+                withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        // Using mvn deploy with GITHUB_TOKEN
+                        sh "mvn deploy -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation -Dusername=MahmoudAbdulkareem -Dpassword=${GITHUB_TOKEN}"
                     }
                 }
             }
         }
-    }
+
 
     post {
         success {
