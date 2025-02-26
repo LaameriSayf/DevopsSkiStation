@@ -11,8 +11,8 @@
 	</parent>
 
 	<groupId>tn.esprit.spring</groupId>
-	<artifactId>gestion-ski</artifactId>
-	<version>1.0</version>
+	<artifactId>gestion-station-skii</artifactId>
+	<version>1.2.1</version>
 	<name>gestion-course</name>
 
 	<properties>
