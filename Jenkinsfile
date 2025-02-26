@@ -1,4 +1,7 @@
-  stages {
+pipeline {
+    agent any
+
+    stages {
         stage('Checkout') {
             steps {
                 git credentialsId: 'github-credentials', branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
@@ -11,10 +14,22 @@
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Test') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Name must match Jenkins SonarQube config
-                    sh 'mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.host.url=http://your-sonarqube-server:9000 -Dsonar.login=your_sonar_token'
-                }
+                sh 'mvn test'
             }
         }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'mvn deploy -DskipTests'
+            }
+        }
+    }
+}
