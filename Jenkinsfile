@@ -1,10 +1,13 @@
 pipeline {
     agent any
+    tools {
+        jdk 'JDK 17'   // Specify the correct JDK version installed in Jenkins
+        maven 'Maven 3.8'   // Specify the correct Maven version
+    }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the repository
                 git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
@@ -22,7 +25,7 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 script {
-                    sh 'mvn test'
+                    sh 'mvn test -e -X'   // Enable debug output for troubleshooting
                 }
             }
         }
@@ -31,7 +34,7 @@ pipeline {
             steps {
                 echo 'Deploying the project...'
                 script {
-                    sh 'mvn deploy -DskipTests'
+                    sh 'mvn deploy -DskipTests'  // Skip tests during deployment to speed up the process
                 }
             }
         }
@@ -43,11 +46,11 @@ pipeline {
         }
 
         failure {
-            echo 'Build or deployment failed. Please check the logs.'
+            echo 'Build or deployment failed. Please check the logs for more details.'
         }
 
         always {
-            cleanWs()
+            cleanWs()  // Clean up workspace after the build process
         }
     }
 }
