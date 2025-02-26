@@ -4,6 +4,9 @@ pipeline {
     environment {
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
         SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
+        MAVEN_HOME = 'C:/Program Files/Maven'  // Path to Maven installation
+        MAVEN_REPO = 'C:/Users/Negam/.m2/repository'  // Local repository
+        MAVEN_SETTINGS = 'C:/Users/Negam/.m2/settings.xml'  // Path to settings.xml
     }
 
     stages {
@@ -38,22 +41,21 @@ pipeline {
         }
 
         stage('Deploy') {
-                   steps {
-                       withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_PASSWORD')]) {
-                           script {
-                               def settingsXmlPath = 'C:/Users/Negam/.m2/settings.xml'
+            steps {
+                withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_PASSWORD')]) {
+                    script {
+                        def settingsXmlPath = 'C:/Users/Negam/.m2/settings.xml'  // Path to settings.xml
 
-                               sh """
-                                   mvn deploy --settings ${settingsXmlPath} \
-                                   -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
-                                   -Dusername=MahmoudAbdulkareem \
-                                   -Dpassword=$GITHUB_PASSWORD
-                               """
+                        sh """
+                            mvn deploy --settings ${settingsXmlPath} \
+                            -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
+                            -Dusername=MahmoudAbdulkareem \
+                            -Dpassword=$GITHUB_PASSWORD
+                        """
                     }
                 }
             }
         }
-
     }
 
     post {
