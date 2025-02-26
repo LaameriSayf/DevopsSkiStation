@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    tools {
-        jdk 'JDK 17'   // Specify the correct JDK version installed in Jenkins
-        maven 'Maven 3.8'   // Specify the correct Maven version
-    }
 
     stages {
         stage('Checkout') {
@@ -25,7 +21,7 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 script {
-                    sh 'mvn test -e -X'   // Enable debug output for troubleshooting
+                    sh 'mvn test -e -X'   
                 }
             }
         }
@@ -34,7 +30,7 @@ pipeline {
             steps {
                 echo 'Deploying the project...'
                 script {
-                    sh 'mvn deploy -DskipTests'  // Skip tests during deployment to speed up the process
+                    sh 'mvn deploy -DskipTests'
                 }
             }
         }
@@ -50,7 +46,7 @@ pipeline {
         }
 
         always {
-            cleanWs()  // Clean up workspace after the build process
+            cleanWs()
         }
     }
 }
