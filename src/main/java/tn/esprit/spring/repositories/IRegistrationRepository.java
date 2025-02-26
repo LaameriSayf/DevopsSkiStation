@@ -23,7 +23,6 @@ public interface IRegistrationRepository extends CrudRepository<Registration, Lo
 
     List<Registration> findByNumWeek(int numWeek);
 
-    List<Registration> findBySkierId(Long skierId);
 
     //  long countDistinctByNumWeekAndSkier_NumSkierAndCourse_NumCourse(int numWeek, Long numSkier, Long numCourse);
 

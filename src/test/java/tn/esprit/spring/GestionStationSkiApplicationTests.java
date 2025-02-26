@@ -6,11 +6,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.spring.entities.Registration;
-import tn.esprit.spring.entities.Support;
 import tn.esprit.spring.services.IRegistrationServices;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,43 +34,77 @@ class GestionStationSkiApplicationTests {
 	}
 
 	@Test
-	void testAssignRegistrationToCourse() {
-		Long numRegistration = 1L;
-		Long numCourse = 2L;
-		Registration registration = new Registration();
+	void testUpdateRegistrationById() {
+		Long registrationId = 1L;
+		Registration existingRegistration = new Registration();
+		existingRegistration.setNumWeek(5);
 
-		when(registrationServices.assignRegistrationToCourse(numRegistration, numCourse)).thenReturn(registration);
+		Registration updatedRegistration = new Registration();
+		updatedRegistration.setNumWeek(7);
 
-		Registration result = registrationServices.assignRegistrationToCourse(numRegistration, numCourse);
+		when(registrationServices.updateRegistrationbyId(registrationId, updatedRegistration)).thenReturn(updatedRegistration);
+
+		Registration result = registrationServices.updateRegistrationbyId(registrationId, updatedRegistration);
 		assertNotNull(result);
-		verify(registrationServices, times(1)).assignRegistrationToCourse(numRegistration, numCourse);
+		assertEquals(7, result.getNumWeek());
+		verify(registrationServices, times(1)).updateRegistrationbyId(registrationId, updatedRegistration);
 	}
 
 	@Test
-	void testAddRegistrationAndAssignToSkierAndCourse() {
+	void testAddRegistration() {
 		Registration registration = new Registration();
-		Long numSkieur = 1L;
-		Long numCours = 2L;
+		registration.setNumWeek(4);
 
-		when(registrationServices.addRegistrationAndAssignToSkierAndCourse(registration, numSkieur, numCours)).thenReturn(registration);
+		when(registrationServices.addRegistration(registration)).thenReturn(registration);
 
-		Registration result = registrationServices.addRegistrationAndAssignToSkierAndCourse(registration, numSkieur, numCours);
+		Registration result = registrationServices.addRegistration(registration);
 		assertNotNull(result);
-		verify(registrationServices, times(1)).addRegistrationAndAssignToSkierAndCourse(registration, numSkieur, numCours);
+		assertEquals(4, result.getNumWeek());
+		verify(registrationServices, times(1)).addRegistration(registration);
 	}
 
 	@Test
-	void testNumWeeksCourseOfInstructorBySupport() {
-		Long numInstructor = 1L;
-		Support support = Support.SKI;
-		List<Integer> expectedWeeks = Arrays.asList(1, 2, 3);
+	void testDeleteRegistration() {
+		Long registrationId = 1L;
+		when(registrationServices.deleteRegistration(registrationId)).thenReturn("registration deleted");
 
-		when(registrationServices.numWeeksCourseOfInstructorBySupport(numInstructor, support)).thenReturn(expectedWeeks);
+		String result = registrationServices.deleteRegistration(registrationId);
+		assertEquals("registration deleted", result);
+		verify(registrationServices, times(1)).deleteRegistration(registrationId);
+	}
 
-		List<Integer> result = registrationServices.numWeeksCourseOfInstructorBySupport(numInstructor, support);
+	@Test
+	void testGetAllRegistrations() {
+		Registration reg1 = new Registration();
+		reg1.setNumWeek(3);
+
+		Registration reg2 = new Registration();
+		reg2.setNumWeek(5);
+
+		List<Registration> registrations = Arrays.asList(reg1, reg2);
+
+		when(registrationServices.getAllRegistrations()).thenReturn(registrations);
+
+		List<Registration> result = registrationServices.getAllRegistrations();
 		assertNotNull(result);
-		assertEquals(3, result.size());
-		assertEquals(expectedWeeks, result);
-		verify(registrationServices, times(1)).numWeeksCourseOfInstructorBySupport(numInstructor, support);
+		assertEquals(2, result.size());
+		verify(registrationServices, times(1)).getAllRegistrations();
+	}
+
+	@Test
+	void testGetRegistrationsByWeek() {
+		int numWeek = 5;
+		Registration reg = new Registration();
+		reg.setNumWeek(numWeek);
+
+		List<Registration> registrations = Arrays.asList(reg);
+
+		when(registrationServices.getRegistrationsByWeek(numWeek)).thenReturn(registrations);
+
+		List<Registration> result = registrationServices.getRegistrationsByWeek(numWeek);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals(5, result.get(0).getNumWeek());
+		verify(registrationServices, times(1)).getRegistrationsByWeek(numWeek);
 	}
 }
