@@ -42,14 +42,14 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_PASSWORD')]) {
                     script {
-                        // Use the path to the settings.xml for Maven configuration
                         def settingsXmlPath = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
 
+                        // Using 'withCredentials' securely without interpolation
                         sh """
                             mvn deploy --settings ${settingsXmlPath} \
                             -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
                             -Dusername=MahmoudAbdulkareem \
-                            -Dpassword=$GITHUB_PASSWORD
+                            -Dpassword=\${GITHUB_PASSWORD}
                         """
                     }
                 }
