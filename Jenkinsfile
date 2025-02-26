@@ -1,12 +1,5 @@
 pipeline {
     agent any
-
-    environment {
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'  // Path to your JDK
-        MAVEN_HOME = 'C:\\Maven'  // Path to your Maven installation
-        PATH = "${JAVA_HOME}\\bin;${MAVEN_HOME}\\bin;${env.PATH}"  // Add Java and Maven to system PATH
-    }
-
     stages {
         stage('Checkout') {
             steps {
