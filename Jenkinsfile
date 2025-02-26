@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'Qube'
+        SONARQUBE_SERVER = 'sonar'
     }
 
     stages {
