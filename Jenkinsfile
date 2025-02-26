@@ -15,7 +15,6 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Compiling the project...'
                 script {
                     sh 'mvn clean compile'
                 }
@@ -24,20 +23,14 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                echo 'Running SonarQube analysis...'
                 script {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    """
+                    sh 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}'
                 }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
                 script {
                     sh 'mvn test -e -X'
                 }
@@ -45,13 +38,22 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                echo 'Deploying the project...'
-                script {
-                    sh 'mvn deploy -DskipTests'
+                   steps {
+                       withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_PASSWORD')]) {
+                           script {
+                               def settingsXmlPath = 'C:/Users/Negam/.m2/settings.xml'
+
+                               sh """
+                                   mvn deploy --settings ${settingsXmlPath} \
+                                   -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
+                                   -Dusername=MahmoudAbdulkareem \
+                                   -Dpassword=$GITHUB_PASSWORD
+                               """
+                    }
                 }
             }
         }
+
     }
 
     post {
