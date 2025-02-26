@@ -51,7 +51,7 @@ pipeline {
                             mvn deploy --settings ${settingsXmlPath} ^
                             -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation ^
                             -Dusername=MahmoudAbdulkareem ^
-                            -Dpassword=$GITHUB_PASSWORD
+                            -Dpassword=\$GITHUB_PASSWORD
                         """
                     }
                 }
