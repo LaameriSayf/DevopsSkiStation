@@ -1,9 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-          SONARQUBE_SERVER = 'SonarQubeServer'
-      }
 
     stages {
         stage('Checkout') {
@@ -52,17 +49,5 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            echo 'Build and deployment were successful!'
-        }
 
-        failure {
-            echo 'Build or deployment failed. Please check the logs for more details.'
-        }
-
-        always {
-            cleanWs()
-        }
-    }
 }
