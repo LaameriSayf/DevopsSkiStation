@@ -19,7 +19,7 @@ public class SkierRestController {
     private final ISkierServices skierServices;
 
     @Operation(description = "Add Skier")
-    @PostMapping("/add")
+    @PostMapping("/addSkier")
     public Skier addSkier(@RequestBody Skier skier){
         return  skierServices.addSkier(skier);
     }

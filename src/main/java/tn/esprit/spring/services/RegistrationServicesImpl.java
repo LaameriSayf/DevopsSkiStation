@@ -11,6 +11,7 @@ import tn.esprit.spring.repositories.ISkierRepository;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Collections;
 import java.util.List;
 @Slf4j
 @AllArgsConstructor
@@ -102,5 +103,43 @@ public class RegistrationServicesImpl implements  IRegistrationServices{
     public List<Integer> numWeeksCourseOfInstructorBySupport(Long numInstructor, Support support) {
         return registrationRepository.numWeeksCourseOfInstructorBySupport(numInstructor, support);
     }
+    //CRUD
+    @Override
+    public Registration updateRegistrationbyId(Long id, Registration registration) {
+        if(registrationRepository.findById(id).isPresent()){
+            Registration existingRegistration = registrationRepository.findById(id).get();
+            existingRegistration.setNumWeek(registration.getNumWeek());
+            return registrationRepository.save(existingRegistration);
+        }else return null;
+
+    }
+    @Override
+    public Registration addRegistration(Registration registration) {
+        return registrationRepository.save(registration);
+    }
+
+    @Override
+    public String deleteRegistration(Long id) {
+        Registration r = registrationRepository.findById(id).orElse(null);
+        registrationRepository.delete(r);
+        return "registrtaion deleted";
+    }
+
+    @Override
+    public List<Registration> getAllRegistrations() {
+        return  (List<Registration>) registrationRepository.findAll();
+    }
+
+    @Override
+    public List<Registration> getRegistrationsByWeek(int numWeek) {
+        return registrationRepository.findByNumWeek(numWeek);
+    }
+
+    @Override
+    public void deleteRegistrationsBySkierId(Long skierId) {
+        List<Registration> registrations = registrationRepository.findBySkierId(skierId);
+        registrationRepository.deleteAll(registrations);
+    }
+
 
 }

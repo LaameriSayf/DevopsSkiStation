@@ -21,7 +21,11 @@ public interface IRegistrationRepository extends CrudRepository<Registration, Lo
             "where r.numWeek = ?1 and r.skier.numSkier = ?2 and r.course.numCourse = ?3")
     long countDistinctByNumWeekAndSkier_NumSkierAndCourse_NumCourse(int numWeek, Long numSkier, Long numCourse);
 
-  //  long countDistinctByNumWeekAndSkier_NumSkierAndCourse_NumCourse(int numWeek, Long numSkier, Long numCourse);
+    List<Registration> findByNumWeek(int numWeek);
+
+    List<Registration> findBySkierId(Long skierId);
+
+    //  long countDistinctByNumWeekAndSkier_NumSkierAndCourse_NumCourse(int numWeek, Long numSkier, Long numCourse);
 
 
 
