@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
         SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
-        MAVEN_SETTINGS = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
+        MAVEN_SETTINGS = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml' // Correct path for Windows
     }
 
     stages {
@@ -17,7 +17,12 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    bat 'mvn clean compile' // Use 'bat' instead of 'sh' for Windows
+                    // Use 'bat' for Windows, 'sh' for Linux/Mac
+                    if (isUnix()) {
+                        sh 'mvn clean compile'  // Linux/Mac
+                    } else {
+                        bat 'mvn clean compile'  // Windows
+                    }
                 }
             }
         }
@@ -25,7 +30,11 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    bat 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}' // Windows specific
+                    if (isUnix()) {
+                        sh 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}'  // Linux/Mac
+                    } else {
+                        bat 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}'  // Windows
+                    }
                 }
             }
         }
@@ -33,7 +42,11 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    bat 'mvn test -e -X' // Windows shell command
+                    if (isUnix()) {
+                        sh 'mvn test -e -X'  // Linux/Mac
+                    } else {
+                        bat 'mvn test -e -X'  // Windows
+                    }
                 }
             }
         }
@@ -44,13 +57,22 @@ pipeline {
                     script {
                         def settingsXmlPath = 'C:/Program Files (x86)/Jenkins/.m2/settings.xml'
 
-                        // Ensure the correct shell (bat) is used for Windows
-                        bat """
-                            mvn deploy --settings ${settingsXmlPath} ^
-                            -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation ^
-                            -Dusername=MahmoudAbdulkareem ^
-                            -Dpassword=%GITHUB_PASSWORD%
-                        """
+                        // Conditional shell command based on OS type
+                        if (isUnix()) {
+                            sh """
+                                mvn deploy --settings ${settingsXmlPath} \
+                                -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
+                                -Dusername=MahmoudAbdulkareem \
+                                -Dpassword=${GITHUB_PASSWORD}
+                            """
+                        } else {
+                            bat """
+                                mvn deploy --settings ${settingsXmlPath} ^
+                                -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation ^
+                                -Dusername=MahmoudAbdulkareem ^
+                                -Dpassword=%GITHUB_PASSWORD%
+                            """
+                        }
                     }
                 }
             }
