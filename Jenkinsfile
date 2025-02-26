@@ -12,7 +12,7 @@ pipeline {
             steps {
                 echo 'Compiling the project...'
                 script {
-                    sh 'mvn clean compile'
+                sh 'mvn clean install'
                 }
             }
         }
