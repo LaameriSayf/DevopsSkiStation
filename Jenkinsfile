@@ -2,15 +2,16 @@ pipeline {
     agent any
 
     stages {
-        stage('Git') {
+        stage('Git Checkout') {
             steps {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: 'Sayf']],  // Corrected branch name
+                        branches: [[name: 'Sayf']],
                         userRemoteConfigs: [[
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
-                        ]]
+                        ]],
+                        extensions: [[$class: 'CloneOption', depth: 1, noTags: false, shallow: true]]  // Shallow Clone
                     ])
                 }
             }
@@ -22,7 +23,7 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 script {
                     sh 'mvn test'
