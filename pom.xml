@@ -19,7 +19,7 @@
 		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
 		<sonar.host.url>http://192.168.33.10:9000</sonar.host.url>
-		<sonar.token>squ_82542e1f3d757d0409bf0f2790ec74c222409027</sonar.token>     <!-- Replace with the token you generated -->
+		<sonar.token>squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f</sonar.token>     <!-- Replace with the token you generated -->
 
 	</properties>
 
