@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                git credentialsId: 'github-credentials', branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
 
