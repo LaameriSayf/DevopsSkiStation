@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-  tools {
-        sonar 'SonarQube Server'  
-    }
+    environment {
+          SONARQUBE_SERVER = 'SonarQubeServer'
+      }
 
     stages {
         stage('Checkout') {
