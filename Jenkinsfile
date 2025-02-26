@@ -1,7 +1,6 @@
 pipeline {
     agent any
 
-
     stages {
         stage('Checkout') {
             steps {
@@ -17,18 +16,6 @@ pipeline {
                 }
             }
         }
-
-
-
-         stage('SonarQube Analysis') {
-                    steps {
-                        withSonarQubeEnv('SonarQubeServer') {
-                            script {
-                                    sh 'mvn sonar:sonar -Dsonar.projectKey=squ_377a618e5e81fe20dbf2c375969455a0fefb5eeb -Dsonar.host.url=http://192.168.33.10:9000'
-                            }
-                        }
-                    }
-                }
 
         stage('Test') {
             steps {
@@ -49,5 +36,17 @@ pipeline {
         }
     }
 
+    post {
+        success {
+            echo 'Build and deployment were successful!'
+        }
 
+        failure {
+            echo 'Build or deployment failed. Please check the logs for more details.'
+        }
+
+        always {
+            cleanWs()
+        }
+    }
 }
