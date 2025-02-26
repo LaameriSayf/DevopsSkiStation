@@ -1,9 +1,6 @@
 pipeline {
     agent any
 
-     tools {
-            sonar 'sonar'
-        }
 
     stages {
         stage('Checkout') {
