@@ -76,51 +76,50 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
+		<!-- JUnit Dependencies (ensure only one declaration for each) -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<scope>test</scope>
+			<version>5.7.0</version> <!-- Ensure version consistency -->
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.7.0</version> <!-- Ensure version consistency -->
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Mockito Dependencies (ensure only one declaration for each) -->
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
+			<version>3.7.7</version> <!-- Ensure version consistency -->
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>3.7.7</version> <!-- Ensure version consistency -->
 			<scope>test</scope>
 		</dependency>
+
+		<!-- SpringDoc OpenAPI for Swagger -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>1.6.12</version>
 		</dependency>
-
-
-		<!-- SpringDoc OpenAPI for Swagger -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>5.7.0</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -139,4 +138,19 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>github-repository</id> <!-- This must match the id in settings.xml -->
+			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url> <!-- GitHub Package URL -->
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
+	</distributionManagement>
+
+
 </project>

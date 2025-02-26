@@ -21,19 +21,12 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 script {
-                    sh 'mvn test -e -X'   
+                    sh 'mvn test -e -X'
                 }
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo 'Deploying the project...'
-                script {
-                    sh 'mvn deploy -DskipTests'
-                }
-            }
-        }
+
     }
 
     post {
