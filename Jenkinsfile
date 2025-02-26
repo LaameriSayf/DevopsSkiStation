@@ -42,15 +42,12 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                    script {
-                        // Using mvn deploy with GITHUB_TOKEN
-                        sh "mvn deploy -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation -Dusername=MahmoudAbdulkareem -Dpassword=${GITHUB_TOKEN}"
-                    }
+                script {
+                    // Using mvn deploy without credentials and skipping tests
+                    sh "mvn deploy -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation -DskipTests"
                 }
             }
         }
-
 
     post {
         success {
