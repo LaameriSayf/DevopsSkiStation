@@ -7,7 +7,7 @@ pipeline {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '/Sayf']],  // Correction ici
+                        branches: [[name: 'Sayf']],  // Corrected branch name
                         userRemoteConfigs: [[
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                         ]]
@@ -15,20 +15,19 @@ pipeline {
                 }
             }
         }
-         stage(' maven build ') {
-                    steps{
-                        script {
-                            sh 'mvn clean install'
-                        }
-                    }
-
+        stage('Maven Build') {
+            steps {
+                script {
+                    sh 'mvn clean install'
                 }
-                 stage('test') {
-                            steps {
-                                script {
-                                    sh 'mvn test'
-                                }
-                            }
-                        }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test'
+                }
+            }
+        }
     }
 }
