@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SONARQUBE_URL = 'http://your-sonarqube-server:9000'  // Change this if needed
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -26,9 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
-                }
+                sh 'mvn sonar:sonar'
             }
         }
 
@@ -36,15 +30,6 @@ pipeline {
             steps {
                 sh 'mvn deploy -DskipTests'
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Build and deployment successful!'
-        }
-        failure {
-            echo 'Build failed. Check logs for errors.'
         }
     }
 }
