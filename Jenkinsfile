@@ -2,24 +2,23 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
-        MAVEN_HOME = 'C:\\Maven'
-        PATH = "${JAVA_HOME}\\bin;${MAVEN_HOME}\\bin;${env.PATH}"
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'  // Path to your JDK
+        MAVEN_HOME = 'C:\\Maven'  // Path to your Maven installation
+        PATH = "${JAVA_HOME}\\bin;${MAVEN_HOME}\\bin;${env.PATH}"  // Add Java and Maven to system PATH
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the repository
                 git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building the project...'
+                echo 'Compiling the project...'
                 script {
-                    sh 'mvn clean install'
+                    sh 'mvn clean compile'
                 }
             }
         }
@@ -29,15 +28,6 @@ pipeline {
                 echo 'Running tests...'
                 script {
                     sh 'mvn test'
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                echo 'Packaging the project...'
-                script {
-                    sh 'mvn package'
                 }
             }
         }
@@ -62,7 +52,7 @@ pipeline {
         }
 
         always {
-            cleanWs()  
+            cleanWs()
         }
     }
 }
