@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        SONARQUBE_SERVER = 'Qube'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,6 +17,17 @@ pipeline {
                 echo 'Compiling the project...'
                 script {
                     sh 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Running SonarQube analysis...'
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'mvn sonar:sonar'
+                    }
                 }
             }
         }
