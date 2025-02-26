@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
-        SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'  // Replace this with the actual token in a secure way
+        SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
     }
 
     stages {
@@ -16,7 +16,6 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Use mvn to clean and compile
                     sh 'mvn clean compile'
                 }
             }
@@ -25,7 +24,6 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Use mvn to trigger SonarQube analysis
                     sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
@@ -34,7 +32,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Use mvn to run tests
                     sh 'mvn test -e -X'
                 }
             }
@@ -43,7 +40,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Using mvn deploy without credentials and skipping tests
                     sh "mvn deploy -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation -DskipTests"
                 }
             }
