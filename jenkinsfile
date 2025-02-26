@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'test_db'  // Correspond à spring.datasource.url
+        DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = ''  // Pas de mot de passe défini dans application-test.properties
-        DB_PORT = '3306'  // Port par défaut, car localhost:3306 est utilisé
+        DB_PASS = ''
+        DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
 
@@ -18,27 +18,39 @@ pipeline {
             }
         }
 
+        stage('Test Docker') {
+            steps {
+                script {
+                    sh '''
+                    echo "Vérification de Docker..."
+                    whoami
+                    sudo docker version
+                    sudo docker ps
+                    '''
+                }
+            }
+        }
+
         stage('Start MySQL') {
             steps {
                 script {
                     sh '''
-                    # Vérifier si Docker est installé et accessible
-                    if ! command -v docker &> /dev/null; then
+                    echo "Vérification de Docker..."
+                    if ! sudo command -v docker &> /dev/null; then
                         echo "Erreur : Docker n'est pas installé ou accessible !"
                         exit 1
                     fi
 
-                    # Vérifier si le conteneur MySQL existe
-                    if [ $(docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
-                        if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                    if [ $(sudo docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
+                        if [ $(sudo docker ps -q -f name=$MYSQL_CONTAINER) ]; then
                             echo "Le conteneur MySQL est déjà en cours d'exécution."
                         else
                             echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                            docker start $MYSQL_CONTAINER
+                            sudo docker start $MYSQL_CONTAINER
                         fi
                     else
                         echo "Démarrage de MySQL..."
-                        docker run --name $MYSQL_CONTAINER \
+                        sudo docker run --name $MYSQL_CONTAINER \
                             -e MYSQL_DATABASE=$DB_NAME \
                             -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                             -p $DB_PORT:3306 \
@@ -48,8 +60,7 @@ pipeline {
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
 
-                    # Vérifier si MySQL tourne bien
-                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    sudo docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
                     '''
                 }
             }
