@@ -18,6 +18,43 @@ pipeline {
             }
         }
 
+        stage('Start MySQL') {
+            steps {
+                script {
+                    sh '''
+                    # Vérifier si Docker est installé et accessible
+                    if ! command -v docker &> /dev/null; then
+                        echo "Erreur : Docker n'est pas installé ou accessible !"
+                        exit 1
+                    fi
+
+                    # Vérifier si le conteneur MySQL existe
+                    if [ $(docker ps -a -q -f name=$MYSQL_CONTAINER) ]; then
+                        if [ $(docker ps -q -f name=$MYSQL_CONTAINER) ]; then
+                            echo "Le conteneur MySQL est déjà en cours d'exécution."
+                        else
+                            echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
+                            docker start $MYSQL_CONTAINER
+                        fi
+                    else
+                        echo "Démarrage de MySQL..."
+                        docker run --name $MYSQL_CONTAINER \
+                            -e MYSQL_DATABASE=$DB_NAME \
+                            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                            -p $DB_PORT:3306 \
+                            -d mysql:8
+                    fi
+
+                    echo "Attente de MySQL (10 sec)..."
+                    sleep 10
+
+                    # Vérifier si MySQL tourne bien
+                    docker ps | grep $MYSQL_CONTAINER || (echo "MySQL n'a pas démarré !" && exit 1)
+                    '''
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 script {
@@ -39,6 +76,19 @@ pipeline {
                 script {
                     sh 'mvn test'
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Pipeline terminé."
+            }
+        }
+        failure {
+            script {
+                echo "Une erreur est survenue."
             }
         }
     }
