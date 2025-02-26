@@ -7,7 +7,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.6.9</version>
-		<relativePath/>
+		<relativePath/> 
 	</parent>
 
 	<groupId>tn.esprit.spring</groupId>
@@ -74,7 +74,6 @@
 			</exclusions>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -90,7 +89,6 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>3.7.7</version>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -108,7 +106,6 @@
 
 	<build>
 		<plugins>
-
 			<plugin>
 				<groupId>org.sonarsource.scanner.maven</groupId>
 				<artifactId>sonar-maven-plugin</artifactId>
@@ -133,7 +130,7 @@
 	<distributionManagement>
 		<repository>
 			<id>github-repository</id>
-			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
+			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url> <!-- GitHub Package URL -->
 		</repository>
 	</distributionManagement>
 
