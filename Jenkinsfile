@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_HOST_URL = 'http://192.168.33.10:9000'
+        SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,6 +18,19 @@ pipeline {
                 echo 'Compiling the project...'
                 script {
                     sh 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Running SonarQube analysis...'
+                script {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }

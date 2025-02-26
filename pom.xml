@@ -12,7 +12,7 @@
 
 	<groupId>tn.esprit.spring</groupId>
 	<artifactId>gestion-ski</artifactId>
-	<version>1.2</version>
+	<version>1.0</version>
 	<name>gestion-course</name>
 
 	<properties>
