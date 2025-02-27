@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
- environment {
-        SONAR_HOST_URL = 'http://192.168.33.10:9000'
-        SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'  // Replace this with the actual token in a secure way
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -23,15 +18,13 @@ pipeline {
             }
         }
 
-       stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Use mvn to trigger SonarQube analysis
-                    sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                    sh "mvn sonar:sonar -Dsonar.host.url=http://192.168.33.10:9000 -Dsonar.login=squ_13302c3b2c82ba9e780bffed41127a1f81466a9a"
                 }
             }
         }
-
 
         stage('Test') {
             steps {
