@@ -75,4 +75,5 @@ class SkierControllerMockitoTests {
 				.andExpect(content().string("1"));
 	}
 
+
 }

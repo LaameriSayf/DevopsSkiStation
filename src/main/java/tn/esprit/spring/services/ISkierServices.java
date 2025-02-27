@@ -29,5 +29,6 @@ public interface ISkierServices {
 	long countSkiersBySubscriptionType(TypeSubscription typeSubscription);
 
 
+
 }
 

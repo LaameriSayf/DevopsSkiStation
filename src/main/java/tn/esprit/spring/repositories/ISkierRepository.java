@@ -16,4 +16,5 @@ public interface ISkierRepository extends JpaRepository<Skier, Long> {
 
    List<Skier> findByCity(String city);
 
+
 }

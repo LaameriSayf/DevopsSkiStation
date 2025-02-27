@@ -120,4 +120,5 @@ public class SkierServicesImpl implements ISkierServices {
         return skierRepository.findBySubscription_TypeSub(typeSubscription).size();
     }
 
+
 }
