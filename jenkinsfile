@@ -8,6 +8,8 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         GITHUB_USER = 'HalimTrabelsi'
+        GITHUB_TOKEN = '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' // Inclure ici la clé pour des tests
+
     }
 
     stages {
