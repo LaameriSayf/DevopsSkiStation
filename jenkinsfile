@@ -63,7 +63,16 @@ pipeline {
             }
         }
 
-
+        stage('Build & Deploy') {
+            steps {
+                withCredentials([string(credentialsId: 'tokenGithub', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        sh 'mvn clean compile'
+                        sh 'mvn deploy -DskipTests -Dgithub.token=${GITHUB_TOKEN}'
+                    }
+                }
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
