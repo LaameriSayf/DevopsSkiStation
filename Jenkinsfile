@@ -30,23 +30,22 @@ pipeline {
                 }
             }
         }
-         //  Stage Test : Lancer les tests Maven
-                stage('Test') {
-                    steps {
-                        script {
-                            // Exécution de la commande Maven pour lancer les tests
-                            sh 'mvn test'
-                        }
-                    }
+
+        // 3️⃣ Stage Test : Lancer les tests Maven
+        stage('Test') {
+            steps {
+                script {
+                    // Exécution de la commande Maven pour lancer les tests
+                    sh 'mvn test'
                 }
             }
+        }
 
-        //  Stage SonarQube : Analyse du code avec SonarQube
-        stage('mvn SonarQube') {
+        // 4️⃣ Stage SonarQube : Analyse du code avec SonarQube
+        stage('SonarQube Analysis') {
             steps {
                 script {
                     // Exécution de l'analyse SonarQube avec le plugin SonarQube Scanner
-                    // Assurez-vous que vous avez configuré SonarQube dans Jenkins
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=DevopsSkiStation \
@@ -56,6 +55,5 @@ pipeline {
                 }
             }
         }
-
-
+    }
 }
