@@ -18,13 +18,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
 
         stage('Test') {
             steps {
@@ -34,26 +27,14 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+  stage('SonarQube Analysis') {
             steps {
                 script {
-                    writeFile file: "$HOME/.m2/settings.xml", text: '''<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
-
-                        <servers>
-                            <server>
-                                <id>github-repository</id>
-                                <username>MahmoudAbdulkareem</username> <!-- Your GitHub username -->
-                                <password>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</password> <!-- Your GitHub token -->
-                            </server>
-                        </servers>
-
-                    </settings>'''
-                    sh 'mvn deploy -DskipTests'
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
+
 
     }
 
