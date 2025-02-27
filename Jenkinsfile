@@ -2,14 +2,71 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://192.168.33.10:9000'
-        SONAR_TOKEN = 'squ_cedfa64b26bbe8a2c0183fdf15eb5ca0a643816f'
+        DB_NAME = 'test_db'
+        DB_USER = 'root'
+        DB_PASS = ''
+        DB_PORT = '3306'
+        MYSQL_CONTAINER = 'mysql-test'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                script {
+                    git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                }
+            }
+        }
+
+        stage('Test Docker') {
+            steps {
+                script {
+                    sh '''
+                    set -e
+                    echo "Checking Docker..."
+                    whoami
+                    docker version
+                    docker ps
+                    '''
+                }
+            }
+        }
+
+        stage('Start MySQL') {
+            steps {
+                script {
+                    sh '''
+                    set -e
+                    echo "Starting MySQL..."
+
+                    if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            echo "MySQL container is already running."
+                        else
+                            echo "MySQL container exists but is stopped. Restarting..."
+                            docker start $MYSQL_CONTAINER
+                        fi
+                    else
+                        echo "Starting a new MySQL container..."
+                        docker run --name $MYSQL_CONTAINER \
+                            -e MYSQL_DATABASE=$DB_NAME \
+                            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                            -p $DB_PORT:3306 \
+                            -d mysql:8
+                    fi
+
+                    echo "Waiting for MySQL to be ready (10 sec)..."
+                    sleep 10
+
+                    if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "MySQL did not start correctly!"
+                        exit 1
+                    fi
+
+                    echo "Checking MySQL container logs..."
+                    docker logs $MYSQL_CONTAINER | tail -n 20
+                    '''
+                }
             }
         }
 
@@ -23,8 +80,8 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                withSonarQubeEnv('SQ1') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
@@ -32,31 +89,22 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'mvn test -e -X'
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    sh "mvn deploy -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation -DskipTests"
+                    sh 'mvn test'
                 }
             }
         }
     }
 
     post {
-        success {
-            echo 'Build and deployment were successful!'
-        }
-
-        failure {
-            echo 'Build or deployment failed. Please check the logs for more details.'
-        }
-
         always {
-            cleanWs()  // Clean workspace after pipeline execution
+            script {
+                echo "Pipeline execution finished."
+            }
+        }
+        failure {
+            script {
+                echo "An error occurred in the pipeline."
+            }
         }
     }
 }
