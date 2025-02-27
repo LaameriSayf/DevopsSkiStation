@@ -66,12 +66,18 @@ pipeline {
 
         stage('Build & Deploy') {
             steps {
-                withCredentials([string(credentialsId: 'tokenGithub1', variable: 'GITHUB_TOKEN')]) { // Utilisation des credentials Jenkins
+                withCredentials([string(credentialsId: 'tokenGithub1', variable: 'GITHUB_TOKEN')]) {
                     script {
                         echo "Le token GitHub a été chargé avec succès"
 
-                        // Clone du repository avec authentification via token
-                        sh "git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/LaameriSayf/DevopsSkiStation.git"
+                        // Vérifier si le répertoire existe et le supprimer avant de cloner
+                        sh '''
+                        if [ -d "DevopsSkiStation" ]; then
+                            echo "Répertoire DevopsSkiStation trouvé, suppression..."
+                            rm -rf DevopsSkiStation
+                        fi
+                        git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/LaameriSayf/DevopsSkiStation.git
+                        '''
 
                         // Commandes Maven pour nettoyer, compiler et déployer
                         sh 'mvn clean compile'
@@ -82,6 +88,7 @@ pipeline {
                 }
             }
         }
+
 
 
 
