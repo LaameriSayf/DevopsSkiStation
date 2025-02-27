@@ -84,7 +84,7 @@ pipeline {
                         sh 'mvn clean compile'
 
                         // Déploiement avec Maven en utilisant le token et les autres paramètres
-                        sh "mvn deploy -DskipTests -Dusername=${GITHUB_USER} -Dgithub.token=${GITHUB_TOKEN}"
+                        sh "mvn deploy -DskipTests -Dusername=${GITHUB_USER} -Dgithub.token=${GITHUB_TOKEN} -X"
                     }
                 }
             }
