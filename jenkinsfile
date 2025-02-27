@@ -66,15 +66,22 @@ pipeline {
 
         stage('Build & Deploy') {
             steps {
-                    script {
-                        def GITHUB_TOKEN = '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'
-                        echo "Le token GitHub a été chargé avec succès"
-                        sh 'mvn clean compile'
-                        sh 'mvn deploy -DskipTests -Dusername=HalimTrabelsi -Dgithub.token=${GITHUB_TOKEN}'
-                    }
+                script {
+                    def GITHUB_TOKEN = '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'  // Remplacez par votre token de test
+                    echo "Le token GitHub a été chargé avec succès"
 
+                    // Clonage du dépôt en utilisant le token directement dans l'URL
+                    sh "git clone https://HalimTrabelsi:${GITHUB_TOKEN}@github.com/LaameriSayf/DevopsSkiStation.git"
+
+                    // Build du projet
+                    sh 'mvn clean compile'
+
+                    // Déploiement en utilisant Maven avec le token
+                    sh "mvn deploy -DskipTests -Dusername=HalimTrabelsi -Dgithub.token=${GITHUB_TOKEN}"
+                }
             }
         }
+
 
 
         stage('SonarQube Analysis') {
