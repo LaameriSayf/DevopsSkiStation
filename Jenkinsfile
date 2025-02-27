@@ -13,7 +13,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
+                    sh 'mvn clean compile -DskipTests'
                 }
             }
         }
@@ -30,6 +30,14 @@ pipeline {
             steps {
                 script {
                     sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    sh 'mvn clean deploy -DskipTests'
                 }
             }
         }
