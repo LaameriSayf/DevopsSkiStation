@@ -7,7 +7,6 @@ pipeline {
         DB_PASS = ''
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
-        GITHUB_USER = 'HalimTrabelsi'
 
     }
 
@@ -59,15 +58,24 @@ pipeline {
 
                     echo "Attente de MySQL (10 sec)..."
                     sleep 10
+
+                    if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "MySQL n'a pas démarré !"
+                        exit 1
+                    fi
                     '''
                 }
             }
         }
 
-
-
-
-
+        stage('Build & Deploy') {
+            steps {
+                script {
+                    sh 'mvn clean compile'
+                    sh 'mvn deploy -DskipTests'
+                }
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
