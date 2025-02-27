@@ -1,6 +1,7 @@
 package tn.esprit.spring.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.spring.entities.Course;
 import tn.esprit.spring.entities.Instructor;
@@ -17,8 +18,10 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class InstructorServicesImpl implements IInstructorServices{
-
+    @Autowired
     private IInstructorRepository instructorRepository;
+
+
     private ICourseRepository courseRepository;
 
     public InstructorServicesImpl() {
@@ -67,27 +70,35 @@ public class InstructorServicesImpl implements IInstructorServices{
 
     // 1️⃣ Rechercher les instructeurs ayant plus de X années d'expérience
     public List<Instructor> findInstructorsWithMoreExperienceThan(int years) {
-        int currentYear = LocalDate.now().getYear();  // Année actuelle
+        LocalDate today = LocalDate.now();
         return instructorRepository.findAll().stream()
-                .filter(instructor -> (currentYear - instructor.getDateOfHire().getYear()) > years)
+                .filter(instructor -> {
+                    LocalDate hireDate = instructor.getDateOfHire();
+                    int experience = today.getYear() - hireDate.getYear();
+                    // Ajuste l'expérience si l'anniversaire n'est pas encore passé cette année
+                    if (today.getMonthValue() < hireDate.getMonthValue() ||
+                            (today.getMonthValue() == hireDate.getMonthValue() && today.getDayOfMonth() < hireDate.getDayOfMonth())) {
+                        experience--;
+                    }
+                    return experience >= years;
+                })
                 .collect(Collectors.toList());
     }
 
     // 2️⃣ Obtenir la liste des cours d’un instructeur
     public Set<Course> getCoursesByInstructor(Long instructorId) {
-        Optional<Instructor> instructor = instructorRepository.findById(instructorId);
-        return instructor.map(Instructor::getCourses)
+        Instructor instructor = instructorRepository.findById(instructorId)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
+        return instructor.getCourses();
     }
 
     // 3️⃣ Calculer la moyenne des prix des cours d’un instructeur
     public double calculateAverageCoursePrice(Long instructorId) {
-        Optional<Instructor> instructor = instructorRepository.findById(instructorId);
-        return instructor.map(inst -> inst.getCourses().stream()
-                        .mapToDouble(Course::getPrice)
-                        .average()
-                        .orElse(0.0))
+        Instructor instructor = instructorRepository.findById(instructorId)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
+        return instructor.getCourses().stream()
+                .mapToDouble(Course::getPrice)
+                .average()
+                .orElse(0.0);
     }
-
 }

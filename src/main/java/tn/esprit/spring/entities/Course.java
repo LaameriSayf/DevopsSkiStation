@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,7 +28,7 @@ public class Course implements Serializable {
 	@Enumerated(EnumType.STRING)
 	TypeCourse typeCourse;
 	@Enumerated(EnumType.STRING)
-	Support support;
+	private Support support;
 	Float price;
 	int timeSlot;
 
