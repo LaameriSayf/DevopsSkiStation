@@ -9,8 +9,8 @@
         <relativePath/>
     </parent>
     <groupId>tn.esprit</groupId>
-    <artifactId>ouday_oueslati_4TWIN5</artifactId>
-    <version>1.0.2</version>
+    <artifactId>ouday_oueslati</artifactId>
+    <version>0.0.3</version>
     <name>ouday_oueslati</name>
     <description>ouday_oueslati</description>
     <url/>
@@ -90,13 +90,11 @@
     <distributionManagement>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url> 
-        </repository>
-        <snapshotRepository>
-            <id>github</id>
+            <name>GitHub Packages</name>
             <url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
-        </snapshotRepository>
+        </repository>
     </distributionManagement>
+
 
     <build>
         <plugins>
@@ -115,7 +113,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.1.1</version> <!-- Version stable recommandée -->
             </plugin>
 
 
