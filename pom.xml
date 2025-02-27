@@ -10,7 +10,7 @@
     </parent>
     <groupId>tn.esprit</groupId>
     <artifactId>ouday_oueslati_4TWIN5</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <name>ouday_oueslati</name>
     <description>ouday_oueslati</description>
     <url/>
@@ -80,14 +80,24 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>5.14.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
 
     </dependencies>
     <distributionManagement>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/oudayoueslati/DevopsSkiStation</url>
+            <url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url> 
         </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
+        </snapshotRepository>
     </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
@@ -102,6 +112,12 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.1</version>
+            </plugin>
+
 
 
         </plugins>
