@@ -28,5 +28,10 @@ public interface ISkierServices {
 	List<Skier> retrieveSkiersByCity(String city);
 	long countSkiersBySubscriptionType(TypeSubscription typeSubscription);
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> aa396ea (Test Junit and Mockito)
 }
 

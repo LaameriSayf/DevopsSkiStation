@@ -119,4 +119,9 @@ public class SkierServicesImpl implements ISkierServices {
     public long countSkiersBySubscriptionType(TypeSubscription typeSubscription) {
         return skierRepository.findBySubscription_TypeSub(typeSubscription).size();
     }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> aa396ea (Test Junit and Mockito)
 }
