@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        //  Stage Git : Récupérer le code depuis Git
+        // 1️⃣ Stage Git : Récupérer le code depuis Git
         stage('Git') {
             steps {
                 script {
@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        //  Stage Maven Build : Build du projet avec Maven
+        // 2️⃣ Stage Maven Build : Build du projet avec Maven
         stage('Maven Build') {
             steps {
                 script {
@@ -42,7 +42,7 @@ pipeline {
             }
 
         //  Stage SonarQube : Analyse du code avec SonarQube
-        stage('SonarQube Analysis') {
+        stage('mvn SonarQube') {
             steps {
                 script {
                     // Exécution de l'analyse SonarQube avec le plugin SonarQube Scanner
@@ -50,8 +50,8 @@ pipeline {
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=DevopsSkiStation \
-                        -Dsonar.host.url=http://your-sonarqube-server-url \
-                        -Dsonar.login=your-sonarqube-token
+                        -Dsonar.host.url=http://192.168.56.10:9000 \
+                        -Dsonar.login=sqa_556100e171a613ec0fa7af8ae500f8651feafbee
                     '''
                 }
             }
