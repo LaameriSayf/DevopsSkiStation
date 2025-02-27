@@ -66,13 +66,13 @@ pipeline {
 
         stage('Build & Deploy') {
             steps {
-                withCredentials([string(credentialsId: 'tokenGithub1', variable: 'GITHUB_TOKEN')]) {
                     script {
+                        def GITHUB_TOKEN = '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'
                         echo "Le token GitHub a été chargé avec succès"
                         sh 'mvn clean compile'
                         sh 'mvn deploy -DskipTests -Dusername=HalimTrabelsi -Dgithub.token=${GITHUB_TOKEN}'
                     }
-                }
+
             }
         }
 
