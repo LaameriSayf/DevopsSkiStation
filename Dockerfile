@@ -12,4 +12,4 @@ RUN mvn clean install
 EXPOSE 8080
 
 # Commande à exécuter lors du démarrage du conteneur
-CMD ["java", "-jar", "target/your-app.jar"]
+CMD ["java", "-jar", "target/gestion-station-ski-1.0.jar"]
