@@ -107,14 +107,6 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy') {
-            steps {
-                script {
-                    sh 'mvn clean compile'
-                    sh 'mvn deploy -DskipTests'
-                }
-            }
-        }
     }
 
     post {
