@@ -7,9 +7,12 @@ import tn.esprit.spring.entities.Instructor;
 import tn.esprit.spring.repositories.ICourseRepository;
 import tn.esprit.spring.repositories.IInstructorRepository;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -62,6 +65,29 @@ public class InstructorServicesImpl implements IInstructorServices{
         return instructorRepository.save(instructor);
     }
 
+    // 1️⃣ Rechercher les instructeurs ayant plus de X années d'expérience
+    public List<Instructor> findInstructorsWithMoreExperienceThan(int years) {
+        int currentYear = LocalDate.now().getYear();  // Année actuelle
+        return instructorRepository.findAll().stream()
+                .filter(instructor -> (currentYear - instructor.getDateOfHire().getYear()) > years)
+                .collect(Collectors.toList());
+    }
 
+    // 2️⃣ Obtenir la liste des cours d’un instructeur
+    public Set<Course> getCoursesByInstructor(Long instructorId) {
+        Optional<Instructor> instructor = instructorRepository.findById(instructorId);
+        return instructor.map(Instructor::getCourses)
+                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+    }
+
+    // 3️⃣ Calculer la moyenne des prix des cours d’un instructeur
+    public double calculateAverageCoursePrice(Long instructorId) {
+        Optional<Instructor> instructor = instructorRepository.findById(instructorId);
+        return instructor.map(inst -> inst.getCourses().stream()
+                        .mapToDouble(Course::getPrice)
+                        .average()
+                        .orElse(0.0))
+                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+    }
 
 }

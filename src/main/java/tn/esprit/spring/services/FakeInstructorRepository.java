@@ -168,4 +168,9 @@ public class FakeInstructorRepository implements IInstructorRepository {
     public <S extends Instructor, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
         return null;
     }
+
+    @Override
+    public List<Instructor> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName) {
+        return null;
+    }
 }
