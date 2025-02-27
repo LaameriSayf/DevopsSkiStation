@@ -28,7 +28,5 @@ public interface ISkierServices {
 	List<Skier> retrieveSkiersByCity(String city);
 	long countSkiersBySubscriptionType(TypeSubscription typeSubscription);
 
-
-
 }
 

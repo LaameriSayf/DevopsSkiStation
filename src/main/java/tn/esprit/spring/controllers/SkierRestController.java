@@ -73,7 +73,6 @@ public class SkierRestController {
         return skierServices.updateSkier(numSkier, skierDetails);
     }
 
-
     @Operation(description = "Retrieve Skiers by City")
     @GetMapping("/byCity/{city}")
     public List<Skier> getSkiersByCity(@PathVariable("city") String city) {
