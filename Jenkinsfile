@@ -50,7 +50,7 @@ pipeline {
                         </servers>
 
                     </settings>'''
-                    sh 'mvn deploy -DskipTests -s $HOME/.m2/settings.xml'
+                    sh 'mvn deploy -DskipTests'
                 }
             }
         }
