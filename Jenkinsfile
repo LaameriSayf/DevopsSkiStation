@@ -18,20 +18,7 @@ pipeline {
             }
         }
 
-        stage('Test Docker') {
-            steps {
-                script {
-                    sh '''
-                    set -e
-                    echo "Checking Docker..."
-                    whoami
-                    docker version
-                    docker ps
-                    '''
-                }
-            }
-        }
-
+      
         stage('Start MySQL') {
             steps {
                 script {
