@@ -65,7 +65,7 @@ pipeline {
 
         stage('Build & Deploy') {
             steps {
-                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'tokenGithub', variable: 'GITHUB_TOKEN')]) {
                     script {
                         sh 'mvn clean compile'
                         sh 'mvn deploy -DskipTests -Dusername=$GITHUB_USER -Dpassword=$GITHUB_TOKEN'
