@@ -18,6 +18,14 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test '
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SQ1') {
@@ -26,13 +34,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                script {
-                    sh 'mvn test '
-                }
-            }
-        }
+
     }
 
     post {
