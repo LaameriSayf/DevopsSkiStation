@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // 1️⃣ Stage Git : Récupérer le code depuis Git
+        //  Stage Git : Récupérer le code depuis Git
         stage('Git') {
             steps {
                 script {
@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        // 2️⃣ Stage Maven Build : Build du projet avec Maven
+        //  Stage Maven Build : Build du projet avec Maven
         stage('Maven Build') {
             steps {
                 script {
@@ -30,8 +30,18 @@ pipeline {
                 }
             }
         }
+         //  Stage Test : Lancer les tests Maven
+                stage('Test') {
+                    steps {
+                        script {
+                            // Exécution de la commande Maven pour lancer les tests
+                            sh 'mvn test'
+                        }
+                    }
+                }
+            }
 
-        // 3️⃣ Stage SonarQube : Analyse du code avec SonarQube
+        //  Stage SonarQube : Analyse du code avec SonarQube
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -47,14 +57,5 @@ pipeline {
             }
         }
 
-        // 4️⃣ Stage Test : Lancer les tests Maven
-        stage('Test') {
-            steps {
-                script {
-                    // Exécution de la commande Maven pour lancer les tests
-                    sh 'mvn test'
-                }
-            }
-        }
-    }
+
 }
