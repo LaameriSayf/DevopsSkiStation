@@ -68,12 +68,14 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'tokenGithub1', variable: 'GITHUB_TOKEN')]) {
                     script {
+                        echo "Token GitHub utilisé : ${GITHUB_TOKEN}"  // Affiche le token dans les logs pour vérifier qu'il a été chargé (ne pas faire cela en production)
                         sh 'mvn clean compile'
                         sh 'mvn deploy -DskipTests -Dusername=HalimTrabelsi -Dgithub.token=${GITHUB_TOKEN}'
                     }
                 }
             }
         }
+
 
         stage('SonarQube Analysis') {
             steps {
