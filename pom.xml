@@ -9,17 +9,16 @@
 		<version>2.6.9</version>
 		<relativePath/>
 	</parent>
-
 	<groupId>tn.esprit.spring</groupId>
 	<artifactId>gestion-stationskii</artifactId>
-	<version>1.2.5</version>
+	<version>1.2.5-SNAPSHOT</version> <!-- Use a SNAPSHOT version -->
 	<name>gestion-course</name>
 
 	<properties>
 		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
 		<sonar.host.url>http://192.168.33.10:9000</sonar.host.url>
-		<sonar.token>squ_13302c3b2c82ba9e780bffed41127a1f81466a9a</sonar.token>     <!-- Replace with the token you generated -->
+		<sonar.token>squ_cdc1d6b8e8b7deee5b28d4bdb54373df824c2477</sonar.token>     <!-- Replace with the token you generated -->
 
 	</properties>
 
