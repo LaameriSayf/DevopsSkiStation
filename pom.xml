@@ -16,10 +16,9 @@
 	<name>gestion-course</name>
 
 	<properties>
-		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
 		<sonar.host.url>http://192.168.33.10:9000</sonar.host.url>
-		<sonar.token>squ_bedc5365428565d4671414ee14f1c49d13ebdad8</sonar.token>     <!-- Replace with the token you generated -->
+		<sonar.login>squ_4234086c09c0c3d568f52b3303480e43ed7d9426</sonar.login>     <!-- Replace with the token you generated -->
 
 	</properties>
 
@@ -82,7 +81,7 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.7.0</version>
+			<version>5.9.2</version>
 		</dependency>
 
 		<dependency>
