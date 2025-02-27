@@ -8,6 +8,7 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         GITHUB_USER = 'HalimTrabelsi'
+        GITHUB_TOKEN = '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'
     }
 
     stages {
@@ -65,12 +66,11 @@ pipeline {
 
         stage('Build & Deploy') {
             steps {
-                withCredentials([string(credentialsId: 'tokenGithub', variable: 'GITHUB_TOKEN')]) {
                     script {
                         sh 'mvn clean compile'
                         sh 'mvn deploy -DskipTests -Dgithub.token=${GITHUB_TOKEN}'
                     }
-                }
+
             }
         }
 
