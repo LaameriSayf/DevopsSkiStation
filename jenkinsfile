@@ -107,16 +107,6 @@ pipeline {
             }
         }
 
-        stage('Deploy to Nexus') {
-            steps {
-                script {
-                    sh '''
-                    echo "Déploiement vers Nexus..."
-                    mvn deploy
-                    '''
-                }
-            }
-        }
     }
 
     post {
