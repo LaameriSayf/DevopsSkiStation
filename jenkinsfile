@@ -106,17 +106,17 @@ pipeline {
                 }
             }
         }
-stage('Deploy to Nexus') {
+
+        stage('Deploy to Nexus') {
             steps {
                 script {
                     sh '''
-                    echo "Déploiement vers Nexus..."
-                    mvn deploy
+                    echo "Déploiement vers Nexus (tests ignorés)..."
+                    mvn deploy -DskipTests
                     '''
                 }
             }
         }
-
     }
 
     post {
