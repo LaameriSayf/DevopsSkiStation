@@ -13,7 +13,11 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     git branch: 'ouday', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000 // Durée en secondes
+                    env.CHECKOUT_DURATION = "${duration}s"
                 }
             }
         }
@@ -21,6 +25,7 @@ pipeline {
         stage('Test Docker') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     sh '''
                     set -e
                     echo "Vérification de Docker..."
@@ -28,6 +33,9 @@ pipeline {
                     docker version
                     docker ps
                     '''
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    env.TEST_DOCKER_DURATION = "${duration}s"
                 }
             }
         }
@@ -35,6 +43,7 @@ pipeline {
         stage('Start MySQL') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     sh '''
                     set -e
                     echo "Démarrage de MySQL..."
@@ -79,6 +88,9 @@ pipeline {
                         exit 1
                     fi
                     '''
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    env.START_MYSQL_DURATION = "${duration}s"
                 }
             }
         }
@@ -86,7 +98,11 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     sh 'mvn clean compile'
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    env.BUILD_DURATION = "${duration}s"
                 }
             }
         }
@@ -94,18 +110,28 @@ pipeline {
         stage('Test with Coverage') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     sh '''
                     echo "Exécution des tests avec couverture..."
                     mvn test
                     '''
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) // Durée en millisecondes
+                    env.TEST_DURATION = "${duration}ms"
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SQ1') {
-                    sh 'mvn sonar:sonar'
+                script {
+                    def startTime = System.currentTimeMillis()
+                    withSonarQubeEnv('SQ1') {
+                        sh 'mvn sonar:sonar'
+                    }
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    env.SONARQUBE_DURATION = "${duration}s"
                 }
             }
         }
@@ -113,10 +139,66 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 script {
+                    def startTime = System.currentTimeMillis()
                     sh '''
                     echo "Déploiement vers Nexus (tests ignorés)..."
                     mvn deploy -DskipTests
                     '''
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    env.NEXUS_DURATION = "${duration}s"
+                }
+            }
+        }
+
+        stage('Generate HTML Report') {
+            steps {
+                script {
+                    // Créer un fichier HTML avec un tableau
+                    def htmlContent = """
+                    <html>
+                    <head>
+                        <style>
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                border: 1px solid black;
+                                padding: 10px;
+                                text-align: center;
+                            }
+                            .duration {
+                                background-color: #e6ffe6;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <table>
+                            <tr>
+                                <th>CHECKOUT</th>
+                                <th>TEST DOCKER</th>
+                                <th>START MYSQL</th>
+                                <th>BUILD</th>
+                                <th>TEST</th>
+                                <th>SONARQUBE</th>
+                                <th>NEXUS</th>
+                            </tr>
+                            <tr>
+                                <td class="duration">${env.CHECKOUT_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.TEST_DOCKER_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.START_MYSQL_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.BUILD_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.TEST_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.SONARQUBE_DURATION ?: 'N/A'}</td>
+                                <td class="duration">${env.NEXUS_DURATION ?: 'N/A'}</td>
+                            </tr>
+                        </table>
+                    </body>
+                    </html>
+                    """
+                    // Écrire le contenu HTML dans un fichier
+                    writeFile file: 'timings.html', text: htmlContent
                 }
             }
         }
@@ -126,6 +208,15 @@ pipeline {
         always {
             script {
                 echo "Pipeline terminé."
+                // Publier le fichier HTML
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: '.',
+                    reportFiles: 'timings.html',
+                    reportName: 'Build Timings Report'
+                ])
             }
         }
         failure {
