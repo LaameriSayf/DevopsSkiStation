@@ -91,18 +91,21 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Test with Coverage') {
             steps {
-                withSonarQubeEnv('SQ1') {
-                    sh 'mvn sonar:sonar'
+                script {
+                    sh '''
+                    echo "Exécution des tests avec couverture..."
+                    mvn test
+                    '''
                 }
             }
         }
 
-        stage('Test') {
+        stage('SonarQube Analysis') {
             steps {
-                script {
-                    sh 'mvn test'
+                withSonarQubeEnv('SQ1') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
