@@ -13,11 +13,22 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
+                    sh 'mvn clean compile -DskipTests'
                 }
             }
         }
-
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test || true'
+                }
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SQ1') {
@@ -30,15 +41,11 @@ pipeline {
     }
 
     post {
-        always {
-            script {
+        success {
                 echo "Pipeline execution finished successfully."
-            }
         }
         failure {
-            script {
                 echo "Pipeline execution failed. Check logs for details."
-            }
         }
     }
 }
