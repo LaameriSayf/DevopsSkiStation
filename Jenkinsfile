@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube'  // Le nom du serveur SonarQube configuré dans Jenkins
+        SONARQUBE_SERVER = 'SonarQube'  // Nom du serveur SonarQube configuré dans Jenkins
     }
 
     stages {
@@ -25,7 +25,6 @@ pipeline {
         stage('Maven Build') {
             steps {
                 script {
-                    // Exécution de la commande Maven pour nettoyer et construire le projet
                     sh 'mvn clean install'
                 }
             }
@@ -35,7 +34,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Exécution de la commande Maven pour lancer les tests
                     sh 'mvn test'
                 }
             }
@@ -45,13 +43,29 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Exécution de l'analyse SonarQube avec le plugin SonarQube Scanner
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=DevopsSkiStation \
                         -Dsonar.host.url=http://192.168.56.10:9000 \
                         -Dsonar.login=squ_4e10e3d4fcaf8920934a3edeb3e941da55baea87
                     '''
+                }
+            }
+        }
+
+        // 5️⃣ Stage Nexus Deployment : Déploiement sur Nexus Repository
+        stage('Nexus Deployment') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh '''
+                            mvn deploy \
+                            -DaltDeploymentRepository=nexus-repo::default::http://192.168.56.10:8081/repository/maven-releases/ \
+                            -DskipTests \
+                            -Dnexus.username=$NEXUS_USER \
+                            -Dnexus.password=$NEXUS_PASS
+                        '''
+                    }
                 }
             }
         }
