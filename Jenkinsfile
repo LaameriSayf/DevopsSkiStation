@@ -56,7 +56,7 @@ pipeline {
         // 5️⃣ Stage Nexus Deployment : Déploiement sur Nexus Repository
         stage('Nexus Deployment') {
             steps {
-                sh 'mvn deploy -DskipTests'
+                sh 'mvn deploy '
 
             }
         }
