@@ -174,14 +174,3 @@ pipeline {
     }
 }
 
-// Actions finales exécutées après les étapes, mais non affichées dans la Stage View
-node {
-    stage('Final Actions') {
-        try {
-            echo "Pipeline terminé."
-        } catch (Exception e) {
-            echo "Une erreur est survenue."
-            throw e
-        }
-    }
-}
