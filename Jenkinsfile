@@ -23,11 +23,6 @@ pipeline {
                     sh 'mvn test || true'
                 }
             }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
         }
         stage('SonarQube Analysis') {
             steps {
