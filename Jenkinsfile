@@ -56,16 +56,7 @@ pipeline {
         // 5️⃣ Stage Nexus Deployment : Déploiement sur Nexus Repository
         stage('Nexus Deployment') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                        sh '''
-                            mvn deploy \
-                            -DaltDeploymentRepository=nexus-repo::default::http://192.168.56.10:8081/repository/maven-releases/ \
-                            -DskipTests \
-                            -Dnexus.username=$NEXUS_USER \
-                            -Dnexus.password=$NEXUS_PASS
-                        '''
-                    }
+                sh 'mvn deploy -DskipTests'
                 }
             }
         }
