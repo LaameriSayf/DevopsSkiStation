@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  Saiflaameri-devops:
+    image: sayflaameri/gestion-station-ski-1.0:latest  # Replace with the correct image tag
+    container_name: Saiflaameri-devops
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/stationSki?autoReconnect=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+    depends_on:
+
+      - mysql
+    networks:
+      - sayf-network
+
+
+  mysql:
+    image: mysql:5.6
+    volumes:
+      - ./sito/db:/var/lib/mysql
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: stationSki
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - sayf-network
+
+networks:
+  sayf-network:
