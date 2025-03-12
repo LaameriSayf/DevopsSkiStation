@@ -47,7 +47,7 @@ pipeline {
                         mvn sonar:sonar \
                         -Dsonar.projectKey=DevopsSkiStation \
                         -Dsonar.host.url=http://192.168.56.10:9000 \
-                        -Dsonar.login=squ_4e10e3d4fcaf8920934a3edeb3e941da55baea87
+                        -Dsonar.login=squ_0e9dee83242a96a31a6afc696aaecbbed0450196
                     '''
                 }
             }
