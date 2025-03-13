@@ -41,32 +41,29 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                    sh 'mvn deploy'
+                    sh 'mvn deploy -DskipTests'
             }
         }
                 stage('Build Docker Image') {
-                    steps {
-                        script {
-                            sh "docker build -t ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                            steps {
+                                script {
+                                    def imageExists = sh(script: "docker images -q gestion-station-ski", returnStdout: true).trim()
+                                    if (!imageExists) {
+                                        echo "Image not found, building..."
+                                        sh "docker build -t gestion-station-ski ."
+                                    } else {
+                                        echo "Image already exists, skipping build."
+                                    }
+                                }
+                            }
                         }
-                    }
-                }
 
-                stage('Push to Nexus') {
-                    steps {
-                        script {
-                            sh "docker login -u admin -p 12345678 ${NEXUS_REPO}"
-                            sh "docker push ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
-                        }
-                    }
-                }
 
-                stage('Docker Compose Up') {
-                    steps {
-                        sh 'docker-compose down || true'
-                        sh 'docker-compose up -d'
-                    }
-                }
+                        stage('Docker Compose Up') {
+                                    steps {
+                                        sh 'docker compose up -d'
+                                    }
+                                }
             }
 
 
