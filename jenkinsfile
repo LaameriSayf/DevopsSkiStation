@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'stationSki'
         DB_USER = 'root'
-        DB_PASS = ''
+        DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -55,14 +55,18 @@ pipeline {
                         set -e
                         echo "Démarrage de MySQL..."
 
+                        # Vérifier si le conteneur MySQL existe
                         if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            # Si le conteneur existe et est en cours d'exécution
                             if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                                 echo "Le conteneur MySQL est déjà en cours d'exécution."
                             else
+                                # Si le conteneur est arrêté, démarrer le conteneur
                                 echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
                                 docker start $MYSQL_CONTAINER
                             fi
                         else
+                            # Démarrer un nouveau conteneur MySQL
                             echo "Démarrage d'un nouveau conteneur MySQL..."
                             docker run --name $MYSQL_CONTAINER \
                                 -e MYSQL_DATABASE=$DB_NAME \
@@ -74,6 +78,7 @@ pipeline {
                         echo "Attente de MySQL (10 sec)..."
                         sleep 10
 
+                        # Vérifier que MySQL est bien démarré
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
                             exit 1
