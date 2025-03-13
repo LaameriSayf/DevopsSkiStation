@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+    NEXUS_REPO = '192.168.33.10:8081'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -34,8 +38,10 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                sh 'mvn deploy -DskipTests'
+                script {
+                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=deploymentRepo::default::http://${NEXUS_REPO}/repository/maven-releases/"
                 }
+            }
         }
 
 
