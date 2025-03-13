@@ -38,9 +38,7 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                script {
-                    sh "mvn deploy -DskipTests -DaltDeploymentRepository=deploymentRepo::default::http://${NEXUS_REPO}/repository/maven-releases/"
-                }
+                    sh 'mvn deploy -DskipTests'
             }
         }
 
