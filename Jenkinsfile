@@ -60,6 +60,26 @@ pipeline {
 
             }
         }
+        stage('Build Docker Image') {
+                    steps {
+                        script {
+                            def dockerImageName = 'sayflaameri/gestion-station-ski'
+                            def dockerImageTag = 'latest'
+                            sh "docker build -t ${dockerImageName}:${dockerImageTag} ."
+                        }
+                    }
+                }
+
+                stage('Push Docker Image') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                                sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                                sh "docker push sayflaameri/gestion-station-ski"
+                            }
+                        }
+                    }
+                }
         stage('Docker Compose') {
                     steps {
                         script {

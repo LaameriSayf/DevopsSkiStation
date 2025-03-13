@@ -2,7 +2,7 @@ version: "3"
 
 services:
   Saiflaameri-devops:
-    image: sayflaameri/gestion-station-ski-1.0:latest  # Replace with the correct image tag
+    image: sayflaameri/gestion-station-ski:latest  # Replace with the correct image tag
     container_name: Saiflaameri-devops
     ports:
       - "8089:8089"
