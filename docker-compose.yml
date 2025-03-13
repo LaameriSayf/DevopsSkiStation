@@ -3,7 +3,8 @@ services:
     image: mysql:latest
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD= my-secret-pw
+      - MYSQL_DATABASE=stationski
+      - MYSQL_ALLOW_EMPTY_PASSWORD= 'yes'
       - MYSQL_DATABASE=stationski
     ports:
       - 3306:3306
