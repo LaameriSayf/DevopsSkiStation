@@ -2,45 +2,62 @@ pipeline {
     agent any
 
     environment {
+        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
+        M2_HOME = "/opt/apache-maven-3.6.3"
+        PATH = "$M2_HOME/bin:$PATH"
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
-        SONAR_LOGIN = 'squ_4234086c09c0c3d568f52b3303480e43ed7d9426' // Replace with a valid token
+        SONAR_LOGIN = 'squ_4234086c09c0c3d568f52b3303480e43ed7d9426'
+        NEXUS_REPO = '192.168.33.10:5000'
+        IMAGE_NAME = 'gestion-station-ski'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('Checkout') {
+        stage('GIT') {
+            steps {
+                git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+            }
+        }
+
+        stage ('Compile Stage') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('Test Stage') {
+            steps {
+                sh 'mvn -X test'
+            }
+        }
+
+        stage('Nexus') {
+            steps {
+                sh 'mvn deploy -DskipTests'
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                    sh "docker build -t ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage('Build') {
+        stage('Push to Nexus') {
             steps {
                 script {
-                    sh 'mvn clean compile -DskipTests'
+                    sh "docker login -u admin -p 12345678 ${NEXUS_REPO}"
+                    sh "docker push ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Test') {
+        stage('Docker Compose Up') {
             steps {
-                script {
-                    sh 'mvn test || true' // Avoid pipeline failure, logs will still show errors
-                }
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml' // Collects test results
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    sh 'mvn sonar:sonar'
-                }
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d'
             }
         }
     }
