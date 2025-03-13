@@ -83,8 +83,8 @@ pipeline {
                                 -d mysql:8.0
                         fi
 
-                        echo "Attente de MySQL (60 sec)..."
-                        sleep 60
+                        echo "Attente de MySQL (90 sec)..."
+                        sleep 90
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
@@ -95,7 +95,7 @@ pipeline {
 
                         # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
-                        for i in {1..30}; do
+                        for i in {1..40}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
                             docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
                             if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
@@ -107,7 +107,7 @@ pipeline {
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 30 tentatives !"
+                            echo "Échec de la connexion à MySQL après 40 tentatives !"
                             echo "Logs du conteneur MySQL :"
                             docker logs $MYSQL_CONTAINER
                             exit 1
@@ -249,18 +249,33 @@ pipeline {
 
     post {
         always {
-            sh '''
-            echo "Nettoyage de l'environnement..."
-            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                docker stop $MYSQL_CONTAINER || true
-                docker rm $MYSQL_CONTAINER || true
-            fi
-            if ls -1 | grep -i "^docker-compose\\.yml$"; then
-                docker-compose down || true
-            else
-                echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
-            fi
-            '''
+            script {
+                if (currentBuild.result == 'SUCCESS') {
+                    // Nettoyage complet uniquement si le pipeline réussit
+                    sh '''
+                    echo "Nettoyage de l'environnement (pipeline réussi)..."
+                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        docker stop $MYSQL_CONTAINER || true
+                        docker rm $MYSQL_CONTAINER || true
+                    fi
+                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                        docker-compose down || true
+                    else
+                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                    fi
+                    '''
+                } else {
+                    // Si le pipeline échoue, on laisse le conteneur mysql-test pour le débogage
+                    sh '''
+                    echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
+                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                        docker-compose down || true
+                    else
+                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                    fi
+                    '''
+                }
+            }
         }
     }
 }
