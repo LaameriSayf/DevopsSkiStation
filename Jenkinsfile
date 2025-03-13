@@ -61,15 +61,15 @@ pipeline {
                 }
             }
 
-        stage('Build Docker Image') {
-                    steps {
-                        script {
-                            def dockerImageName = 'sayflaameri/gestion-station-ski'
-                            def dockerImageTag = 'latest'
-                            sh "docker build -t ${dockerImageName}:${dockerImageTag} ."
-                        }
-                    }
-                }
+       stage('Build Docker Image') {
+           steps {
+               script {
+                   def dockerImageName = 'sayflaameri/gestion-station-ski'
+                   def dockerImageTag = 'latest'
+                   sh "sudo docker build -t ${dockerImageName}:${dockerImageTag} ."
+               }
+           }
+       }
 
                 stage('Push Docker Image') {
                     steps {
