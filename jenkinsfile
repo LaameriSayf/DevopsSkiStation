@@ -71,11 +71,13 @@ pipeline {
                                 -e MYSQL_DATABASE=$DB_NAME \
                                 -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                                 -p $DB_PORT:3306 \
-                                -d mysql:8
+                                --memory="512m" \
+                                --cpus="1" \
+                                -d mysql:8.0
                         fi
 
-                        echo "Attente de MySQL (30 sec)..."
-                        sleep 30
+                        echo "Attente de MySQL (40 sec)..."
+                        sleep 40
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
@@ -92,7 +94,7 @@ pipeline {
                                 break
                             fi
                             echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
-                            sleep 2
+                            sleep 3
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
