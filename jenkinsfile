@@ -246,7 +246,7 @@ pipeline {
                 docker stop $MYSQL_CONTAINER || true
                 docker rm $MYSQL_CONTAINER || true
             fi
-            if [ -f docker-compose.yml ]; then
+            if [ -f Docker-compose.yml ]; then
                 docker-compose down || true
             else
                 echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
