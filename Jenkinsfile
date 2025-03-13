@@ -3,7 +3,6 @@ pipeline {
 
     environment {
     NEXUS_REPO = '192.168.33.10:8081'
-    NEXUS_REPO = '192.168.33.10:5000'
     IMAGE_NAME = 'gestion-station-ski'
     IMAGE_TAG = 'latest'
     }
