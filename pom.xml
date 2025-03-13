@@ -32,18 +32,18 @@
 	</distributionManagement>
 
 <repositories>
-<repository>
-	<id>github</id>
-	<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
-</repository>
+	<repository>
+		<id>github</id>
+		<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
+	</repository>
 </repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
+		</pluginRepository>
+	</pluginRepositories>
 
-<pluginRepositories>
-<pluginRepository>
-	<id>github</id>
-	<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
-</pluginRepository>
-</pluginRepositories>
 
 
 	<dependencies>
