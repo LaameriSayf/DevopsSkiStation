@@ -8,7 +8,7 @@ pipeline {
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // Identifiants Docker Hub
-        IMAGE_NAME = 'ouday2025/devopsskistation'  // Mise à jour avec votre nom d'utilisateur Docker Hub
+        IMAGE_NAME = 'ouday2025/devopsskistation'  // Votre repository existant
         IMAGE_TAG = "v${env.BUILD_NUMBER}"  // Tag basé sur le numéro de build
     }
 
@@ -74,17 +74,17 @@ pipeline {
                                 -d mysql:8
                         fi
 
-                        echo "Attente de MySQL (10 sec)..."
-                        sleep 10
+                        echo "Attente de MySQL (20 sec)..."
+                        sleep 20
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            echo "MySQL n'a pas démarré !" 
+                            echo "MySQL n'a pas démarré !"
                             exit 1
                         fi
 
                         # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
-                        for i in {1..10}; do
+                        for i in {1..15}; do
                             if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
                                 echo "MySQL est prêt !"
                                 break
@@ -94,7 +94,7 @@ pipeline {
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 10 tentatives !"
+                            echo "Échec de la connexion à MySQL après 15 tentatives !"
                             exit 1
                         fi
                         '''
