@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy only the necessary files to avoid unnecessary layers
-COPY target/gestionstationski-1.0.5.jar app.jar
+COPY target/gestionstationski-1.0.7.jar app.jar
 #COPY target/*.jar app.jar
 
 # Expose the application port
