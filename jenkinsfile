@@ -4,12 +4,12 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = 'my-secret-pw'  // Correspond à docker-compose.yml
+        DB_PASS = 'my-secret-pw'
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // Identifiants Docker Hub
-        IMAGE_NAME = 'ouday2025/devopsskistation'  // Mise à jour avec votre nom d'utilisateur Docker Hub
-        IMAGE_TAG = "v${env.BUILD_NUMBER}"  // Tag basé sur le numéro de build
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        IMAGE_NAME = 'ouday2025/devopsskistation'
+        IMAGE_TAG = "v${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -58,6 +58,12 @@ pipeline {
                         set -e
                         echo "Démarrage de MySQL..."
 
+                        # Créer le réseau mynetwork s'il n'existe pas
+                        if ! docker network ls --format '{{.Name}}' | grep -q "^mynetwork$"; then
+                            echo "Création du réseau mynetwork..."
+                            docker network create mynetwork
+                        fi
+
                         if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                                 echo "Le conteneur MySQL est déjà en cours d'exécution."
@@ -68,33 +74,40 @@ pipeline {
                         else
                             echo "Démarrage d'un nouveau conteneur MySQL..."
                             docker run --name $MYSQL_CONTAINER \
+                                --network mynetwork \
                                 -e MYSQL_DATABASE=$DB_NAME \
                                 -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                                 -p $DB_PORT:3306 \
-                                -d mysql:8
+                                --memory="768m" \
+                                --cpus="1.5" \
+                                -d mysql:8.0
                         fi
 
-                        echo "Attente de MySQL (10 sec)..."
-                        sleep 10
+                        echo "Attente de MySQL (50 sec)..."
+                        sleep 50
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            echo "MySQL n'a pas démarré !" 
+                            echo "MySQL n'a pas démarré !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
 
                         # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
-                        for i in {1..10}; do
+                        for i in {1..30}; do
                             if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
                                 echo "MySQL est prêt !"
                                 break
                             fi
-                            echo "MySQL n'est pas encore prêt, attente..."
-                            sleep 2
+                            echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
+                            sleep 3
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 10 tentatives !"
+                            echo "Échec de la connexion à MySQL après 30 tentatives !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
                         '''
@@ -240,7 +253,11 @@ pipeline {
                 docker stop $MYSQL_CONTAINER || true
                 docker rm $MYSQL_CONTAINER || true
             fi
-            docker-compose down || true
+            if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                docker-compose down || true
+            else
+                echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+            fi
             '''
         }
     }
