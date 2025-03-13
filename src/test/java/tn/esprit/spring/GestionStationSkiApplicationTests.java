@@ -40,7 +40,7 @@ class GestionStationSkiApplicationTests {
 	public void testCountSkiersBySubscription() throws Exception {
 		mockMvc.perform(get("/skier/countBySubscription/ANNUAL"))
 				.andExpect(status().isOk())
-				.andExpect(content().string("1"));
+				.andExpect(content().string("2"));
 	}
 }
 
@@ -69,10 +69,10 @@ class SkierControllerMockitoTests {
 
 	@Test
 	public void testCountSkiersBySubscriptionWithMock() throws Exception {
-		when(skierService.countSkiersBySubscriptionType(TypeSubscription.ANNUAL)).thenReturn(1L);
+		when(skierService.countSkiersBySubscriptionType(TypeSubscription.ANNUAL)).thenReturn(2L);
 		mockMvc.perform(get("/skier/countBySubscription/ANNUAL"))
 				.andExpect(status().isOk())
-				.andExpect(content().string("1"));
+				.andExpect(content().string("2"));
 	}
 
 
