@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DB_NAME = 'stationSki'
+        DB_NAME = 'stationski'
         DB_USER = 'root'
         DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
         DB_PORT = '3306'
