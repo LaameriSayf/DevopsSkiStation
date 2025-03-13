@@ -61,15 +61,21 @@ pipeline {
                 }
             }
 
-       stage('Build Docker Image') {
-           steps {
-               script {
-                   def dockerImageName = 'sayflaameri/gestion-station-ski'
-                   def dockerImageTag = 'latest'
-                   sh "sudo docker build -t ${dockerImageName}:${dockerImageTag} ."
-               }
-           }
-       }
+      stage('Build Docker Image') {
+          steps {
+              script {
+                  def dockerImageName = 'sayflaameri/gestion-station-ski'
+                  def dockerImageTag = 'latest'
+
+                  // Vérifie si le fichier .jar existe avant de builder
+                  sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
+
+                  // Construction de l'image Docker
+                  sh "sudo docker build -t ${dockerImageName}:${dockerImageTag} ."
+              }
+          }
+      }
+
 
                 stage('Push Docker Image') {
                     steps {
