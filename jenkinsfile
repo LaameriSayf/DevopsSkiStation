@@ -4,9 +4,12 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = ''
+        DB_PASS = 'my-secret-pw'  // Correspond à docker-compose.yml
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // Identifiants Docker Hub
+        IMAGE_NAME = 'ouday2025/devopsskistation'  // Mise à jour avec votre nom d'utilisateur Docker Hub
+        IMAGE_TAG = "v${env.BUILD_NUMBER}"  // Tag basé sur le numéro de build
     }
 
     stages {
@@ -171,6 +174,74 @@ pipeline {
                 }
             }
         }
+
+        stage('DOCKER IMAGE') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Construction de l'image Docker..."
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER IMAGE : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('DOCKER HUB') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Connexion à Docker Hub..."
+                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        echo "Pousse de l'image vers Docker Hub..."
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER HUB : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('DOCKER-COMPOSE') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        echo "Lancement de Docker Compose..."
+                        docker-compose up -d --build
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape DOCKER-COMPOSE : ${duration}s"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+            echo "Nettoyage de l'environnement..."
+            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                docker stop $MYSQL_CONTAINER || true
+                docker rm $MYSQL_CONTAINER || true
+            fi
+            docker-compose down || true
+            '''
+        }
     }
 }
-
