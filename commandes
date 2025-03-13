@@ -1,0 +1,8 @@
+vagrant up
+vagrant ssh
+sudo systemctl start nexus
+sudo systemctl start nginx
+sudo systemctl start jenkins
+mdp jenkins : Halim123456789-
+mdp nexus: halim123
+mdp sonarqube: Halim123456789-

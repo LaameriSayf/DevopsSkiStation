@@ -1,15 +1,15 @@
-# Utilisez une image de base de Java
-FROM maven:3.8.4-openjdk-11
+# Use a lightweight OpenJDK 17 image
+FROM openjdk:17-jdk-slim
 
-# Copiez votre projet dans l'image
+# Set working directory inside the container
 WORKDIR /app
-COPY . .
 
-# Construisez le projet avec Maven
-RUN mvn clean install
+# Copy only the necessary files to avoid unnecessary layers
+COPY target/gestionstationski-1.0.5.jar app.jar
+#COPY target/*.jar app.jar
 
-# Exposez le port de l'application (si nécessaire)
-EXPOSE 8080
+# Expose the application port
+EXPOSE 8089
 
-# Commande à exécuter lors du démarrage du conteneur
-CMD ["java", "-jar", "target/gestion-station-ski-1.0.jar"]
+# Run the JAR file
+ENTRYPOINT ["java", "-jar", "app.jar"]
