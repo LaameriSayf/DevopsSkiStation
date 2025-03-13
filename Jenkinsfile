@@ -53,11 +53,13 @@ pipeline {
             }
         }
 
-     stage('Deploy to Nexus') {
-                 steps {
-                     sh 'mvn deploy -s /var/lib/jenkins/.m2/settings.xml'
-                 }
-             }
+     stage('Nexus') {
+                steps {
+                    script {
+                        sh 'mvn deploy'
+                    }
+                }
+            }
 
         stage('Build Docker Image') {
                     steps {
