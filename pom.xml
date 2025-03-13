@@ -57,13 +57,19 @@
 
 
 
+<!--	<distributionManagement>-->
+<!--		<repository>-->
+<!--			<id>github</id>-->
+<!--			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>-->
+<!--		</repository>-->
+<!--	</distributionManagement>-->
 	<distributionManagement>
 		<repository>
-			<id>github</id>
-			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
+			<id>deploymentRepo</id>
+			<name>Nexus Repository</name>
+			<url>http://localhost:8081/repository/maven-releases/</url>
 		</repository>
 	</distributionManagement>
-
 
 
 	<build>
