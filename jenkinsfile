@@ -233,7 +233,14 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
+                        // Arrêter et supprimer le conteneur mysql-test s'il existe
                         sh '''
+                        echo "Vérification et arrêt du conteneur mysql-test..."
+                        if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
+                            echo "Arrêt et suppression du conteneur mysql-test..."
+                            docker stop mysql-test || true
+                            docker rm mysql-test || true
+                        fi
                         echo "Lancement de Docker Compose..."
                         docker-compose up -d --build
                         '''
