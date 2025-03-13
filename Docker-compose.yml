@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  app:
+    image: ouday-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8099:8090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/test_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=my-secret-pw
+    depends_on:
+      - mysql
+    networks:
+      - mynetwork
+    command: >
+      sh -c "until mysqladmin ping -h mysql --silent; do
+               echo 'Waiting for MySQL to be ready...';
+               sleep 2;
+             done;
+             java -jar oudayserv.jar"
+
+  mysql:
+    image: mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+      - MYSQL_DATABASE=test_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  mysql-data:
