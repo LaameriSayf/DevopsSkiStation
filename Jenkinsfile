@@ -53,12 +53,11 @@ pipeline {
             }
         }
 
-        // 5️⃣ Stage Nexus Deployment : Déploiement sur Nexus Repository
      stage('Deploy to Nexus') {
-         steps {
-             sh 'mvn deploy -DrepositoryId=deploymentRepo -Dnexus.url=http://192.168.56.10:8081/repository/maven-releases/ -Dusername=admin -Dpassword=$NEXUS_API_KEY'
-         }
-     }
+                 steps {
+                     sh 'mvn deploy -s /var/lib/jenkins/.m2/settings.xml'
+                 }
+             }
 
         stage('Build Docker Image') {
                     steps {
