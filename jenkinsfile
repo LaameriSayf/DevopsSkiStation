@@ -74,27 +74,31 @@ pipeline {
                                 -d mysql:8
                         fi
 
-                        echo "Attente de MySQL (20 sec)..."
-                        sleep 20
+                        echo "Attente de MySQL (30 sec)..."
+                        sleep 30
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
 
                         # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
-                        for i in {1..15}; do
+                        for i in {1..20}; do
                             if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
                                 echo "MySQL est prêt !"
                                 break
                             fi
-                            echo "MySQL n'est pas encore prêt, attente..."
+                            echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
                             sleep 2
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 15 tentatives !"
+                            echo "Échec de la connexion à MySQL après 20 tentatives !"
+                            echo "Logs du conteneur MySQL :"
+                            docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
                         '''
@@ -240,7 +244,11 @@ pipeline {
                 docker stop $MYSQL_CONTAINER || true
                 docker rm $MYSQL_CONTAINER || true
             fi
-            docker-compose down || true
+            if [ -f docker-compose.yml ]; then
+                docker-compose down || true
+            else
+                echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+            fi
             '''
         }
     }
