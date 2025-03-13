@@ -30,13 +30,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SQ1') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
+
 
         stage('Nexus') {
             steps {
