@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   app:
-    image: ouday2025/devopsskistation:${IMAGE_TAG}  # Utilisation de IMAGE_TAG au lieu de BUILD_NUMBER
+    image: ouday2025/devopsskistation:${IMAGE_TAG}  
     ports:
       - "8099:8099"
     environment:
@@ -24,7 +24,7 @@ services:
       - MYSQL_ROOT_PASSWORD=my-secret-pw
       - MYSQL_DATABASE=test_db
     ports:
-      - "3307:3306"  # Changement du port hôte pour éviter les conflits avec mysql-test
+      - "3307:3306"  
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
