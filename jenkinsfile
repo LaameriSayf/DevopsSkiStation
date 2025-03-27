@@ -148,8 +148,8 @@ pipeline {
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime)
-                        echo "Durée de l'étape Test with Coverage : ${duration}ms"
+                        def duration = (endTime - startTime) / 1000  // Corrigé en secondes pour cohérence
+                        echo "Durée de l'étape Test with Coverage : ${duration}s"
                     }
                 }
             }
@@ -233,16 +233,30 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
-                        // Arrêter et supprimer le conteneur mysql-test s'il existe
                         sh '''
+                        set -e
+                        echo "Vérification de la présence de docker-compose.yml..."
+                        ls -la
+                        if [ ! -f docker-compose.yml ]; then
+                            echo "Erreur : docker-compose.yml introuvable !"
+                            exit 1
+                        fi
+                        echo "Vérification de l'image Docker..."
+                        docker images | grep ${IMAGE_NAME}
                         echo "Vérification et arrêt du conteneur mysql-test..."
                         if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
                             echo "Arrêt et suppression du conteneur mysql-test..."
                             docker stop mysql-test || true
                             docker rm mysql-test || true
                         fi
-                        echo "Lancement de Docker Compose..."
+                        echo "Vérification des ports utilisés..."
+                        docker ps -a --format '{{.Names}} {{.Ports}}'
+                        echo "Exportation de IMAGE_TAG pour Docker Compose..."
+                        export IMAGE_TAG=${IMAGE_TAG}
+                        echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
                         docker-compose up -d --build
+                        echo "Vérification des conteneurs lancés..."
+                        docker-compose ps
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
@@ -258,7 +272,6 @@ pipeline {
         always {
             script {
                 if (currentBuild.result == 'SUCCESS') {
-                    // Nettoyage complet uniquement si le pipeline réussit
                     sh '''
                     echo "Nettoyage de l'environnement (pipeline réussi)..."
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
@@ -272,7 +285,6 @@ pipeline {
                     fi
                     '''
                 } else {
-                    // Si le pipeline échoue, on laisse le conteneur mysql-test pour le débogage
                     sh '''
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
                     if ls -1 | grep -i "^docker-compose\\.yml$"; then
