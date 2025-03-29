@@ -10,6 +10,8 @@ pipeline {
         NEXUS_REPO = '192.168.33.10:5000'
         IMAGE_NAME = 'gestion-station-ski'
         IMAGE_TAG = 'latest'
+        NEXUS_USER = 'admin'
+        NEXUS_PASSWORD = '12345678'
     }
 
     stages {
@@ -19,7 +21,7 @@ pipeline {
             }
         }
 
-        stage ('Compile Stage') {
+        stage('Compile Stage') {
             steps {
                 sh 'mvn clean compile'
             }
@@ -31,7 +33,13 @@ pipeline {
             }
         }
 
-        stage('Nexus') {
+        stage('SonarQube Analysis') {
+            steps {
+                sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}"
+            }
+        }
+
+        stage('Nexus Deploy') {
             steps {
                 sh 'mvn deploy -DskipTests'
             }
@@ -48,7 +56,7 @@ pipeline {
         stage('Push to Nexus') {
             steps {
                 script {
-                    sh "docker login -u admin -p 12345678 ${NEXUS_REPO}"
+                    sh "docker login -u ${NEXUS_USER} -p ${NEXUS_PASSWORD} ${NEXUS_REPO}"
                     sh "docker push ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }

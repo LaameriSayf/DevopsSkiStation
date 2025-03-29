@@ -1,37 +1,41 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  mahmoud-devops:
-    image: ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}  # Dynamic tag
-    container_name: mahmoud-devops
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
     ports:
-      - "8089:8089"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/GestionCourse?autoReconnect=true&useSSL=false
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-    depends_on:
-      - mysql
-    networks:
-      - mahmoud-network
-
-  mysql:
-    image: mysql:5.6
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: stationSki
-    ports:
-      - "3306:3306"
+      - "8083:8080"
+      - "50000:50000"
     volumes:
-      - ./sito/db:/var/lib/mysql
-    restart: unless-stopped
+      - jenkins_home:/var/jenkins_home
     networks:
-      - mahmoud-network
+      - devops_network
+
+  nexus:
+    image: sonatype/nexus3
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    environment:
+      - NEXUS_CONTEXT_PATH=/nexus
+    volumes:
+      - nexus_data:/nexus-data
+    networks:
+      - devops_network
+
+  sonarqube:
+    image: sonarqube:lts
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    networks:
+      - devops_network
+
+volumes:
+  jenkins_home:
+  nexus_data:
 
 networks:
-  mahmoud-network:
+  devops_network:
     driver: bridge
