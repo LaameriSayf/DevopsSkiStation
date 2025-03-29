@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
         M2_HOME = "/opt/apache-maven-3.6.3"
         PATH = "$M2_HOME/bin:$PATH"
         SONAR_HOST_URL = 'http://192.168.33.10:9000'
@@ -17,30 +16,34 @@ pipeline {
     stages {
         stage('GIT') {
             steps {
-                git branch: 'mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                git branch: 'Mahmoud', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
 
         stage('Compile Stage') {
             steps {
-                sh 'mvn clean compile'
+                bat 'mvn clean compile'
             }
         }
 
         stage('Test Stage') {
             steps {
-                sh 'mvn -X test'
+                bat 'mvn -X test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                    sh 'mvn sonar:sonar'            }
+             withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                                bat 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN}'
+                            }
         }
 
         stage('Nexus Deploy') {
             steps {
-                sh 'mvn deploy -DskipTests'
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    bat "mvn deploy -DskipTests -Dgithub.token=${GITHUB_TOKEN}"
+                }
             }
         }
 
