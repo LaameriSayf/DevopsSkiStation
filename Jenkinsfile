@@ -35,8 +35,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}"
-            }
+                    sh 'mvn sonar:sonar'            }
         }
 
         stage('Nexus Deploy') {
