@@ -82,16 +82,21 @@ pipeline {
 
 
           // 7️⃣ Push vers DockerHub
-          stage('Push Docker Image') {
-              steps {
-                  script {
-                      withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                          sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
-                          sh "docker push ${DOCKER_IMAGE}"
-                      }
-                  }
-              }
-          }
+     stage('Push Docker Image') {
+         steps {
+             script {
+                 withCredentials([usernamePassword(
+                     credentialsId: 'docker-hub-credentials',
+                     usernameVariable: 'DOCKERHUB_USERNAME',
+                     passwordVariable: 'DOCKERHUB_PASSWORD'
+                 )]) {
+                     sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                     sh "docker push sayflaameri/gestion-station-ski:latest"
+                 }
+             }
+         }
+     }
+
 
           // 8️⃣ Déploiement avec Docker Compose
           stage('Docker Compose') {
