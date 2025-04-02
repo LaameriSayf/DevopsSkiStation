@@ -61,39 +61,43 @@ pipeline {
                 }
             }
 
-    stage('Build Docker Image') {
-        steps {
-            script {
-                def dockerImageName = 'sayflaameri/gestion-station-ski'
-                def dockerImageTag = 'latest'
+   // 6️⃣ Construction de l'image Docker
+          stage('Build Docker Image') {
+              steps {
+                  script {
+                      // Vérifie que le fichier JAR existe
+                      sh 'ls -l target/gestion-station-ski-1.0.jar || exit 1'
 
-                // Vérifie si le fichier .jar existe avant de builder
-                sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
+                      // Build de l'image Docker avec Dockerfile à la racine du projet
+                      sh 'docker build -t ${DOCKER_IMAGE} -f Dockerfile .'
+                  }
+              }
+          }
 
-                // Utiliser le Dockerfile qui est dans ~/docker/
-                sh "docker build -t ${dockerImageName}:${dockerImageTag} -f ~/docker/Dockerfile /var/lib/jenkins/workspace/JobPipline_SaifLammeri4TWIN5/"
-            }
-        }
-    }
+          // 7️⃣ Push vers DockerHub
+          stage('Push Docker Image') {
+              steps {
+                  script {
+                      withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                          sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                          sh "docker push ${DOCKER_IMAGE}"
+                      }
+                  }
+              }
+          }
+
+          // 8️⃣ Déploiement avec Docker Compose
+          stage('Docker Compose') {
+              steps {
+                  script {
+                      sh 'docker-compose down || true'
+                      sh 'docker-compose up -d'
+                  }
+              }
+          }
+      }
 
 
+      }
+  }
 
-                stage('Push Docker Image') {
-                    steps {
-                        script {
-                            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                                sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
-                                sh "docker push sayflaameri/gestion-station-ski"
-                            }
-                        }
-                    }
-                }
-        stage('Docker Compose') {
-                    steps {
-                        script {
-                            sh 'docker-compose up -d'
-                        }
-                    }
-                }
-    }
-}
