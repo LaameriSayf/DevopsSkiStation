@@ -68,14 +68,16 @@ pipeline {
                     def dockerImageName = 'sayflaameri/gestion-station-ski'
                     def dockerImageTag = 'latest'
 
-                    // Vérifie si le fichier .jar existe
+                    sh 'echo "📁 Contenu du workspace actuel :" && pwd && ls -R'
+
                     sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
 
-                    // Build Docker avec les bons chemins
-                    sh "docker build -t ${dockerImageName}:${dockerImageTag} -f docker/Dockerfile ."
+                    // Corrige ici selon l'emplacement que tu trouves :
+                    sh "docker build -t ${dockerImageName}:${dockerImageTag} -f Dockerfile ."
                 }
             }
         }
+
 
 
 
