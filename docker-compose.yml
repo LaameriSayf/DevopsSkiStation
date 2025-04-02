@@ -2,7 +2,7 @@ version: "3"
 
 services:
   Saiflaameri-devops:
-    image: sayflaameri/gestion-station-ski:latest  # Replace with the correct image tag
+    image: sayflaameri/gestion-station-ski:latest
     container_name: Saiflaameri-devops
     ports:
       - "8089:8089"
@@ -13,11 +13,10 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
     depends_on:
-
       - mysql
+    restart: unless-stopped
     networks:
       - sayf-network
-
 
   mysql:
     image: mysql:5.6

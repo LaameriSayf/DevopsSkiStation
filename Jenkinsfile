@@ -99,14 +99,15 @@ pipeline {
 
 
           // 8️⃣ Déploiement avec Docker Compose
-          stage('Docker Compose') {
-              steps {
-                  script {
-                      sh 'docker-compose down || true'
-                      sh 'docker-compose up -d'
-                  }
-              }
-          }
+         stage('Docker Compose') {
+             steps {
+                 script {
+                     sh 'ls -l && cat docker-compose.yml' // debug, optionnel
+                     sh 'docker-compose down || true'
+                     sh 'docker-compose up -d'
+                 }
+             }
+         }
 
 
 
