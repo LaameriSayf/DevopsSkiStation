@@ -62,21 +62,21 @@ pipeline {
             }
 
    // 6️⃣ Construction de l'image Docker
-         stage('Build Docker Image') {
-             steps {
-                 script {
-                     def dockerImageName = 'sayflaameri/gestion-station-ski'
-                     def dockerImageTag = 'latest'
-                     def fullImageName = "${dockerImageName}:${dockerImageTag}"
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def dockerImageName = 'sayflaameri/gestion-station-ski'
+                    def dockerImageTag = 'latest'
 
-                     // Vérifie que le JAR est bien là
-                     sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
+                    // Vérifie si le fichier .jar existe
+                    sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
 
-                     // Build Docker
-                     sh "docker build -t ${fullImageName} -f docker/Dockerfile ."
-                 }
-             }
-         }
+                    // Build Docker avec les bons chemins
+                    sh "docker build -t ${dockerImageName}:${dockerImageTag} -f docker/Dockerfile ."
+                }
+            }
+        }
+
 
 
           // 7️⃣ Push vers DockerHub
