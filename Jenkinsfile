@@ -111,16 +111,14 @@ pipeline {
           stage('Grafana') {
                         steps {
                             script {
-                                def grafanaUrl = 'http://http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
-                                withCredentials([usernamePassword(credentialsId: 'GrafanaCredentialsId', usernameVariable: 'GRAFANA_USERNAME', passwordVariable: 'GRAFANA_PASSWORD')]) {
+                                def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
+                                withCredentials([usernamePassword(credentialsId: 'credential_grafana', usernameVariable: 'GRAFANA_USERNAME', passwordVariable: 'GRAFANA_PASSWORD')]) {
                                     def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
                                     sh curlCommand
                                 }
                             }
-                        }
-
-
-
+                         }
+                         }
 
 
       }
