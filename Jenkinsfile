@@ -5,6 +5,8 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'gestion-station-ski'
     IMAGE_TAG = 'latest'
+    GITHUB_USERNAME = credentials('github-username')
+    GITHUB_TOKEN = credentials('github-token')
     }
 
     stages {
@@ -30,7 +32,18 @@ pipeline {
                 }
             }
         }
-
+        stage('GitHub Deploy') {
+            steps {
+                script {
+                    sh '''
+                    mvn deploy -DskipTests \
+                        -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
+                        -Dusername=$GITHUB_USERNAME \
+                        -Dpassword=$GITHUB_TOKEN
+                    '''
+                }
+            }
+        }
 
         stage('Nexus') {
             steps {
