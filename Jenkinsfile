@@ -5,6 +5,7 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
+    GITHUB = credentials('Maven Deploy Tokenn')
     }
 
     stages {
@@ -44,12 +45,9 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github-creds', usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
                     sh """
-                        mvn deploy -DskipTests \
-                        -DaltDeploymentRepository=github::default::https://$USERNAME:$TOKEN@maven.pkg.github.com/LaameriSayf/DevopsSkiStation
+                        mvn deploy -DskipTests -DaltDeploymentRepository=github::default::https://${GITHUB_USR}:${GITHUB_PSW}@maven.pkg.github.com/LaameriSayf/DevopsSkiStation
                     """
-                }
             }
         }
 
