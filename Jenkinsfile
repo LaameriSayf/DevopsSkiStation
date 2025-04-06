@@ -5,6 +5,8 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
+    GITHUB_USERNAME = credentials('github-creds').username
+    GITHUB_TOKEN = credentials('github-creds').password
     }
 
     stages {
@@ -44,7 +46,11 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                sh 'mvn deploy -DskipTests'
+                sh '''
+                          mvn deploy -DskipTests \
+                            -Dusername=$GITHUB_USERNAME \
+                            -Dpassword=$GITHUB_TOKEN
+                        '''
             }
         }
 
