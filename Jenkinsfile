@@ -5,7 +5,6 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
-    GITHUB_CREDENTIALS = credentials('github-creds')
     }
 
     stages {
@@ -45,13 +44,15 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                sh '''
-                          mvn deploy -DskipTests \
-                            -Dusername=$GITHUB_CREDENTIALS_USR \
-                            -Dpassword=$GITHUB_CREDENTIALS_PSW
-                        '''
+                withCredentials([usernamePassword(credentialsId: 'github-creds', usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
+                    sh """
+                        mvn deploy -DskipTests \
+                        -DaltDeploymentRepository=github::default::https://$USERNAME:$TOKEN@maven.pkg.github.com/LaameriSayf/DevopsSkiStation
+                    """
+                }
             }
         }
+
 
         stage('Build Docker Image') {
             steps {
