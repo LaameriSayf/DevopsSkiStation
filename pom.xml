@@ -88,6 +88,11 @@
 			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
 			<layout>default</layout>
 		</repository>
+
+		<snapshotRepository>
+			<id>nexus-snapshots</id>
+			<url>http://192.168.33.10/repository/maven-snapshots/</url>
+		</snapshotRepository>
 	</distributionManagement>
 
 
