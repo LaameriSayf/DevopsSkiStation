@@ -3,14 +3,12 @@ pipeline {
 
     environment {
     NEXUS_REPO = '192.168.33.10:8081'
-    IMAGE_NAME = 'gestion-station-ski'
+    IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
-    GITHUB_USERNAME = credentials('github-username')
-    GITHUB_TOKEN = credentials('github-token')
     }
 
     stages {
-        stage('Checkout') {
+        stage('Git') {
             steps {
                 script {
                     git branch: 'eya', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
@@ -18,13 +16,14 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('MAVEN Build') {
             steps {
                 script {
                     sh 'mvn clean compile'
                 }
             }
         }
+
         stage('Test') {
             steps {
                 script {
@@ -32,24 +31,23 @@ pipeline {
                 }
             }
         }
-        stage('GitHub Deploy') {
+
+        stage('SonarQube'){
             steps {
-                script {
-                    sh '''
-                    mvn deploy -DskipTests \
-                        -DaltDeploymentRepository=github-repository::default::https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation \
-                        -Dusername=$GITHUB_USERNAME \
-                        -Dpassword=$GITHUB_TOKEN
-                    '''
+                withSonarQubeEnv('SQ1') {
+                    sh 'mvn sonar:sonar'
                 }
             }
+
         }
+
 
         stage('Nexus') {
             steps {
                 sh 'mvn deploy -DskipTests'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                script {
@@ -64,8 +62,17 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Docker Hub') {
+            steps {
+                script {
+                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} eyachamekh/${IMAGE_NAME}:${IMAGE_TAG}"
 
+                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        def image = docker.image("eyachamekh/${IMAGE_NAME}:${IMAGE_TAG}")
+                        image.push()
+                            }
+                        }
+                    }
         }
 
 
@@ -75,9 +82,7 @@ pipeline {
             }
         }
 
-        stage('Grafana') {
 
-        }
     }
 
     post {
