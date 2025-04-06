@@ -47,30 +47,38 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                    sh 'mvn deploy -DskipTests'
+                sh 'mvn deploy -DskipTests'
             }
         }
-                stage('Build Docker Image') {
-                            steps {
-                                script {
-                                    def imageExists = sh(script: "docker images -q gestion-station-ski", returnStdout: true).trim()
-                                    if (!imageExists) {
-                                        echo "Image not found, building..."
-                                        sh "docker build -t gestion-station-ski ."
-                                    } else {
-                                        echo "Image already exists, skipping build."
-                                    }
-                                }
-                            }
-                        }
-
-
-                        stage('Docker Compose Up') {
-                                    steps {
-                                        sh 'docker compose up -d'
-                                    }
-                                }
+        stage('Build Docker Image') {
+            steps {
+               script {
+                    def imageExists = sh(script: "docker images -q gestion-station-ski", returnStdout: true).trim()
+                    if (!imageExists) {
+                        echo "Image not found, building..."
+                        sh "docker build -t gestion-station-ski ."
+                    } else {
+                            echo "Image already exists, skipping build."
+                    }
+               }
             }
+        }
+
+        stage('Push Docker Image') {
+
+        }
+
+
+        stage('Docker Compose') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Grafana') {
+
+        }
+    }
 
 
 
