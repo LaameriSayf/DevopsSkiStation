@@ -5,7 +5,7 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
-    GITHUB = credentials('Maven Deploy Tokenn')
+    GITHUB = credentials('github-creds')
     }
 
     stages {
