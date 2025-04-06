@@ -46,6 +46,7 @@ pipeline {
         stage('Nexus') {
             steps {
                     sh """
+                     echo " Debug: Username=${GITHUB_USR}"
                         mvn deploy -DskipTests -DaltDeploymentRepository=github::default::https://${GITHUB_USR}:${GITHUB_PSW}@maven.pkg.github.com/LaameriSayf/DevopsSkiStation
                     """
             }
