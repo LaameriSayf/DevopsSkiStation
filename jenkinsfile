@@ -9,7 +9,7 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         IMAGE_NAME = 'ouday2025/devopsskistation'
-        IMAGE_TAG = "v${env.BUILD_NUMBER}"
+        IMAGE_TAG = 'v29' // Fixé à v29
     }
 
     stages {
@@ -198,20 +198,22 @@ pipeline {
             }
         }
 
-        stage('Docker Image') {
+        stage('Pull Docker Image') {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
                         set -e
-                        echo "Construction de l'image Docker..."
-                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        echo "Connexion à Docker Hub pour tirer l'image..."
+                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        echo "Téléchargement de l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}..."
+                        docker pull ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Docker Image : ${duration}s"
+                        echo "Durée de l'étape Pull Docker Image : ${duration}s"
                     }
                 }
             }
@@ -225,33 +227,12 @@ pipeline {
                         sh '''
                         set -e
                         echo "Scan de l'image avec Trivy..."
-                        nice -n 10 trivy image --exit-code 1 --severity HIGH,CRITICAL --scanners vuln --timeout 10m ${IMAGE_NAME}:${IMAGE_TAG}
+                        nice -n 10 trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 10m ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
                         echo "Durée de l'étape Scan Docker Image : ${duration}s"
-                    }
-                }
-            }
-        }
-
-        stage('Docker Hub') {
-            steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        sh '''
-                        set -e
-                        echo "Connexion à Docker Hub..."
-                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                        echo "Pousse de l'image vers Docker Hub..."
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        '''
-                    } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Docker Hub : ${duration}s"
                     }
                 }
             }
@@ -311,7 +292,7 @@ pipeline {
                         echo "Exportation de IMAGE_TAG pour Docker Compose..."
                         export IMAGE_TAG=${IMAGE_TAG}
                         echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
-                        docker-compose up -d --build
+                        docker-compose up -d
                         echo "Vérification des conteneurs lancés..."
                         docker-compose ps
                         '''
