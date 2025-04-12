@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = credentials('mysql-password') // Credential ID pour le mot de passe MySQL
+        DB_PASS = credentials('mysql-password')
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
@@ -78,13 +78,13 @@ pipeline {
                                 -e MYSQL_DATABASE=$DB_NAME \
                                 -e MYSQL_ROOT_PASSWORD=$DB_PASS \
                                 -p $DB_PORT:3306 \
-                                --memory="1g" \
-                                --cpus="2" \
+                                --memory="512m" \
+                                --cpus="1" \
                                 -d mysql:8.0
                         fi
 
-                        echo "Attente de MySQL (90 sec)..."
-                        sleep 90
+                        echo "Attente de MySQL (60 sec)..."
+                        sleep 60
 
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
@@ -95,7 +95,7 @@ pipeline {
 
                         # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
-                        for i in {1..40}; do
+                        for i in {1..20}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
                             docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
                             if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
@@ -107,7 +107,7 @@ pipeline {
                         done
 
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 40 tentatives !"
+                            echo "Échec de la connexion à MySQL après 20 tentatives !"
                             echo "Logs du conteneur MySQL :"
                             docker logs $MYSQL_CONTAINER
                             exit 1
@@ -127,7 +127,10 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
-                        sh 'mvn clean compile'
+                        sh '''
+                        set -e
+                        mvn clean compile
+                        '''
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
@@ -143,6 +146,7 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
+                        set -e
                         echo "Exécution des tests avec couverture..."
                         mvn test
                         '''
@@ -161,7 +165,10 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         withSonarQubeEnv('SQ1') {
-                            sh 'mvn sonar:sonar'
+                            sh '''
+                            set -e
+                            mvn sonar:sonar
+                            '''
                         }
                     } finally {
                         def endTime = System.currentTimeMillis()
@@ -178,6 +185,7 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
+                        set -e
                         echo "Déploiement vers Nexus (tests ignorés)..."
                         mvn deploy -DskipTests
                         '''
@@ -196,6 +204,7 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
+                        set -e
                         echo "Construction de l'image Docker..."
                         docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                         '''
@@ -233,6 +242,7 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
+                        set -e
                         echo "Connexion à Docker Hub..."
                         echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                         echo "Pousse de l'image vers Docker Hub..."
@@ -255,6 +265,8 @@ pipeline {
                         withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
                             sh '''
                             set -e
+                            echo "Vérification des fichiers Helm..."
+                            ls -la ./helm/devopsskistation
                             echo "Déploiement avec Helm..."
                             helm upgrade --install devopsskistation ./helm/devopsskistation \
                                 --set image.tag=${IMAGE_TAG} \
@@ -346,7 +358,7 @@ pipeline {
                         Cordialement,
                         Jenkins
                         """,
-                        to: 'votre.email@example.com',
+                        to: 'ouday.oueslati@esprit.tn',
                         replyTo: 'jenkins@yourdomain.com'
                     )
                 } else {
@@ -374,7 +386,7 @@ pipeline {
                         Cordialement,
                         Jenkins
                         """,
-                        to: 'votre.email@example.com',
+                        to: 'ouday.oueslati@esprit.tn',
                         replyTo: 'jenkins@yourdomain.com'
                     )
                 }
