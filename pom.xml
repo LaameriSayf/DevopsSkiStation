@@ -15,8 +15,9 @@
     <description>ouday_oueslati</description>
     <properties>
         <java.version>17</java.version>
-        <!-- Ajout pour contrôler la version de Tomcat -->
         <tomcat.version>10.1.35</tomcat.version>
+        <!-- Ajout pour contrôler la version de Logback -->
+        <logback.version>1.5.13</logback.version>
     </properties>
     <dependencies>
         <dependency>
@@ -42,7 +43,6 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- Mise à jour de spring-web vers 6.1.14 -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
@@ -80,6 +80,17 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!-- Ajout pour corriger les vulnérabilités Logback -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
     </dependencies>
     <distributionManagement>
