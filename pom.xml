@@ -13,21 +13,10 @@
     <version>0.1.8</version>
     <name>ouday_oueslati</name>
     <description>ouday_oueslati</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <properties>
         <java.version>17</java.version>
+        <!-- Ajout pour contrôler la version de Tomcat -->
+        <tomcat.version>10.1.35</tomcat.version>
     </properties>
     <dependencies>
         <dependency>
@@ -38,13 +27,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -55,10 +42,11 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Mise à jour de spring-web vers 6.1.14 -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>6.1.12</version>
+            <version>6.1.14</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -85,7 +73,7 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.12.0</version>
         </dependency>
-          <dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
@@ -93,7 +81,6 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-
     </dependencies>
     <distributionManagement>
         <repository>
@@ -102,8 +89,6 @@
             <url>http://localhost:8081/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
-
-
     <build>
         <plugins>
             <plugin>
@@ -121,7 +106,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version> <!-- Version stable recommandée -->
+                <version>3.1.1</version>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -143,8 +128,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-
         </plugins>
     </build>
 </project>
