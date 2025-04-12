@@ -9,7 +9,7 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         IMAGE_NAME = 'ouday2025/devopsskistation'
-        IMAGE_TAG = 'v29' // Fixé à v29
+        IMAGE_TAG = 'v29' 
     }
 
     stages {
@@ -227,7 +227,7 @@ pipeline {
                         sh '''
                         set -e
                         echo "Scan de l'image avec Trivy..."
-                        nice -n 10 trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 10m ${IMAGE_NAME}:${IMAGE_TAG}
+                        nice -n 10 trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
@@ -316,7 +316,7 @@ pipeline {
                         docker stop $MYSQL_CONTAINER || true
                         docker rm $MYSQL_CONTAINER || true
                     fi
-                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                    if ls -1 | grep -i "^docker-compose\.yml$"; then
                         docker-compose down || true
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
@@ -345,7 +345,7 @@ pipeline {
                 } else {
                     sh '''
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
-                    if ls -1 | grep -i "^docker-compose\\.yml$"; then
+                    if ls -1 | grep -i "^docker-compose\.yml$"; then
                         docker-compose down || true
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
