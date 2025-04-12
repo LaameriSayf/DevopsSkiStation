@@ -241,22 +241,27 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
+                        echo "Vérification préliminaire pour Kubernetes..."
+                        sh '''
+                        set -e
+                        echo "Vérification des outils..."
+                        which kubectl || echo "Erreur : kubectl non trouvé"
+                        which helm || echo "Erreur : helm non trouvé"
+                        echo "Vérification de la version des outils..."
+                        kubectl version --client || echo "Erreur : kubectl non fonctionnel"
+                        helm version || echo "Erreur : helm non fonctionnel"
+                        '''
                         withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
                             sh '''
                             set -e
-                            echo "Vérification des outils..."
-                            which kubectl || echo "kubectl non trouvé"
-                            which helm || echo "helm non trouvé"
                             echo "Vérification de la configuration Kubernetes..."
-                            kubectl version --client
-                            kubectl config view
-                            kubectl get nodes || echo "Échec de la connexion au cluster, vérifiez kubeconfig."
+                            kubectl config view --raw || echo "Erreur : impossible d'afficher la configuration"
+                            echo "Test de la connexion au cluster..."
+                            kubectl get nodes || echo "Erreur : échec de la connexion au cluster"
                             echo "Vérification des fichiers Helm..."
-                            ls -la ./helm/devopsskistation || echo "Répertoire Helm introuvable"
-                            echo "Vérification de Helm..."
-                            helm version
-                            echo "Liste des releases Helm actuelles..."
-                            helm list --namespace default || echo "Échec de la commande helm list"
+                            ls -la ./helm/devopsskistation || echo "Erreur : répertoire Helm introuvable"
+                            echo "Liste des releases Helm..."
+                            helm list --namespace default || echo "Erreur : échec de la commande helm list"
                             echo "Déploiement avec Helm..."
                             helm upgrade --install devopsskistation ./helm/devopsskistation \
                                 --set image.tag=${IMAGE_TAG} \
@@ -308,7 +313,7 @@ pipeline {
                         echo "Vérification de la valeur de IMAGE_TAG..."
                         echo "IMAGE_TAG=${IMAGE_TAG}"
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
+                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
                         echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
                         docker-compose up -d
                         echo "Vérification des conteneurs lancés..."
@@ -332,6 +337,7 @@ pipeline {
                     set -e
                     echo "Nettoyage de l'environnement (pipeline réussi)..."
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "Arrêt et suppression du conteneur $MYSQL_CONTAINER..."
                         docker stop $MYSQL_CONTAINER || true
                         docker rm $MYSQL_CONTAINER || true
                     fi
@@ -339,9 +345,11 @@ pipeline {
                         echo "Contenu de docker-compose.yml avant arrêt :"
                         cat docker-compose.yml
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
+                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || echo "Erreur lors de l'arrêt de Docker Compose"
+                        docker-compose down || echo "Erreur : échec de docker-compose down"
+                        echo "Vérification des conteneurs restants..."
+                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps"
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
@@ -350,25 +358,28 @@ pipeline {
                         subject: "Build #${env.BUILD_NUMBER} - Success",
                         body: """
                         Build #${env.BUILD_NUMBER} succeeded.
-
                         Details:
                         - Image: ${IMAGE_NAME}:${IMAGE_TAG}
                         - Logs: ${env.BUILD_URL}
                         """,
-                        to: 'ouday.oueslati@esprit.tn',
-                        replyTo: 'jenkins@yourdomain.com'
+                        to: 'ouday.oueslati@esprit.tn'
                     )
                 } else {
                     sh '''
                     set -e
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
+                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
+                    fi
                     if [ -f docker-compose.yml ]; then
                         echo "Contenu de docker-compose.yml avant arrêt :"
                         cat docker-compose.yml
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
+                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || echo "Erreur lors de l'arrêt de Docker Compose"
+                        docker-compose down || echo "Erreur : échec de docker-compose down"
+                        echo "Vérification des conteneurs restants..."
+                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps"
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
@@ -377,13 +388,11 @@ pipeline {
                         subject: "Build #${env.BUILD_NUMBER} - Failed",
                         body: """
                         Build #${env.BUILD_NUMBER} failed.
-
                         Details:
                         - Result: ${currentBuild.currentResult}
                         - Logs: ${env.BUILD_URL}
                         """,
-                        to: 'ouday.oueslati@esprit.tn',
-                        replyTo: 'jenkins@yourdomain.com'
+                        to: 'ouday.oueslati@esprit.tn'
                     )
                 }
             }
