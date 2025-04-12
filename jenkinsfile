@@ -244,8 +244,19 @@ pipeline {
                         withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
                             sh '''
                             set -e
+                            echo "Vérification des outils..."
+                            which kubectl || echo "kubectl non trouvé"
+                            which helm || echo "helm non trouvé"
+                            echo "Vérification de la configuration Kubernetes..."
+                            kubectl version --client
+                            kubectl config view
+                            kubectl get nodes || echo "Échec de la connexion au cluster, vérifiez kubeconfig."
                             echo "Vérification des fichiers Helm..."
-                            ls -la ./helm/devopsskistation
+                            ls -la ./helm/devopsskistation || echo "Répertoire Helm introuvable"
+                            echo "Vérification de Helm..."
+                            helm version
+                            echo "Liste des releases Helm actuelles..."
+                            helm list --namespace default || echo "Échec de la commande helm list"
                             echo "Déploiement avec Helm..."
                             helm upgrade --install devopsskistation ./helm/devopsskistation \
                                 --set image.tag=${IMAGE_TAG} \
@@ -255,6 +266,9 @@ pipeline {
                             echo "Déploiement Kubernetes terminé !"
                             '''
                         }
+                    } catch (Exception e) {
+                        echo "Erreur dans Deploy to Kubernetes with Helm : ${e.getMessage()}"
+                        throw e
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
@@ -274,6 +288,7 @@ pipeline {
                         echo "Vérification de la présence de docker-compose.yml..."
                         if [ -f docker-compose.yml ]; then
                             echo "Fichier docker-compose.yml trouvé."
+                            cat docker-compose.yml
                         else
                             echo "Erreur : docker-compose.yml introuvable !"
                             exit 1
@@ -290,6 +305,10 @@ pipeline {
                         docker ps -a --format '{{.Names}} {{.Ports}}'
                         echo "Exportation de IMAGE_TAG pour Docker Compose..."
                         export IMAGE_TAG=${IMAGE_TAG}
+                        echo "Vérification de la valeur de IMAGE_TAG..."
+                        echo "IMAGE_TAG=${IMAGE_TAG}"
+                        echo "Validation de docker-compose.yml..."
+                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
                         echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
                         docker-compose up -d
                         echo "Vérification des conteneurs lancés..."
@@ -317,28 +336,24 @@ pipeline {
                         docker rm $MYSQL_CONTAINER || true
                     fi
                     if [ -f docker-compose.yml ]; then
+                        echo "Contenu de docker-compose.yml avant arrêt :"
+                        cat docker-compose.yml
+                        echo "Validation de docker-compose.yml..."
+                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || true
+                        docker-compose down || echo "Erreur lors de l'arrêt de Docker Compose"
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
                     emailext(
-                        subject: "✅ Build #${env.BUILD_NUMBER} réussi - DevopsSkiStation",
+                        subject: "Build #${env.BUILD_NUMBER} - Success",
                         body: """
-                        Bonjour,
+                        Build #${env.BUILD_NUMBER} succeeded.
 
-                        Le build #${env.BUILD_NUMBER} du projet DevopsSkiStation a réussi !
-
-                        Détails :
-                        - Image Docker : ${IMAGE_NAME}:${IMAGE_TAG}
-                        - Déploiement Kubernetes : Effectué avec Helm
-                        - Déploiement Docker Compose : Effectué pour tests locaux
-                        - Rapport SonarQube : ${env.SONAR_HOST_URL}/dashboard?id=${env.SONAR_PROJECT_KEY}
-                        - Logs Jenkins : ${env.BUILD_URL}
-
-                        Cordialement,
-                        Jenkins
+                        Details:
+                        - Image: ${IMAGE_NAME}:${IMAGE_TAG}
+                        - Logs: ${env.BUILD_URL}
                         """,
                         to: 'ouday.oueslati@esprit.tn',
                         replyTo: 'jenkins@yourdomain.com'
@@ -348,27 +363,24 @@ pipeline {
                     set -e
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
                     if [ -f docker-compose.yml ]; then
+                        echo "Contenu de docker-compose.yml avant arrêt :"
+                        cat docker-compose.yml
+                        echo "Validation de docker-compose.yml..."
+                        docker-compose config || echo "Erreur dans la configuration Docker Compose"
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || true
+                        docker-compose down || echo "Erreur lors de l'arrêt de Docker Compose"
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
                     emailext(
-                        subject: "❌ Build #${env.BUILD_NUMBER} échoué - DevopsSkiStation",
+                        subject: "Build #${env.BUILD_NUMBER} - Failed",
                         body: """
-                        Bonjour,
+                        Build #${env.BUILD_NUMBER} failed.
 
-                        Le build #${env.BUILD_NUMBER} du projet DevopsSkiStation a échoué.
-
-                        Détails :
-                        - Étape échouée : ${currentBuild.currentResult}
-                        - Logs Jenkins : ${env.BUILD_URL}
-
-                        Veuillez vérifier les logs pour plus d'informations.
-
-                        Cordialement,
-                        Jenkins
+                        Details:
+                        - Result: ${currentBuild.currentResult}
+                        - Logs: ${env.BUILD_URL}
                         """,
                         to: 'ouday.oueslati@esprit.tn',
                         replyTo: 'jenkins@yourdomain.com'
