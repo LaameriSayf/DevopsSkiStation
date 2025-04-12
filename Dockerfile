@@ -10,8 +10,6 @@ RUN apt-get update && \
         libext2fs2=1.46.2-2+deb11u1 \
         gzip=1.10-4+deb11u1 \
         liblzma5=5.2.5-2.1~deb11u1 && \
-    apt-get remove -y libdb5.3 bash && \
-    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8090
