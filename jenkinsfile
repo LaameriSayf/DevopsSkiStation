@@ -274,8 +274,9 @@ pipeline {
                         sh '''
                         set -e
                         echo "Vérification de la présence de docker-compose.yml..."
-                        ls -la
-                        if [ ! -f docker-compose.yml ]; then
+                        if [ -f docker-compose.yml ]; then
+                            echo "Fichier docker-compose.yml trouvé."
+                        else
                             echo "Erreur : docker-compose.yml introuvable !"
                             exit 1
                         fi
@@ -311,12 +312,14 @@ pipeline {
             script {
                 if (currentBuild.result == 'SUCCESS') {
                     sh '''
+                    set -e
                     echo "Nettoyage de l'environnement (pipeline réussi)..."
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                         docker stop $MYSQL_CONTAINER || true
                         docker rm $MYSQL_CONTAINER || true
                     fi
-                    if ls -1 | grep -i "^docker-compose\.yml$"; then
+                    if [ -f docker-compose.yml ]; then
+                        echo "Arrêt de Docker Compose..."
                         docker-compose down || true
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
@@ -344,8 +347,10 @@ pipeline {
                     )
                 } else {
                     sh '''
+                    set -e
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
-                    if ls -1 | grep -i "^docker-compose\.yml$"; then
+                    if [ -f docker-compose.yml ]; then
+                        echo "Arrêt de Docker Compose..."
                         docker-compose down || true
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
