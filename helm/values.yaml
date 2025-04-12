@@ -1,0 +1,32 @@
+replicaCount: 2
+
+image:
+  repository: ouday2025/devopsskistation
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: LoadBalancer
+  port: 80
+
+mysql:
+  enabled: true
+  database: test_db
+  secretName: mysql-credentials
+  storageSize: 5Gi
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+  requests:
+    cpu: "0.5"
+    memory: "512Mi"
+
+mysqlResources:
+  limits:
+    cpu: "2"
+    memory: "1Gi"
+  requests:
+    cpu: "1"
+    memory: "512Mi"
