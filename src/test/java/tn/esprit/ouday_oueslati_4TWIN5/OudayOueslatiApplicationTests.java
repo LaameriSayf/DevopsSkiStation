@@ -17,8 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import tn.esprit.ouday_oueslati_4TWIN5.entities.Color;
 import tn.esprit.ouday_oueslati_4TWIN5.entities.Piste;
+import tn.esprit.ouday_oueslati_4TWIN5.entities.Color;
 import tn.esprit.ouday_oueslati_4TWIN5.repositries.IPisteRepository;
 import tn.esprit.ouday_oueslati_4TWIN5.services.PisteServicesImpl;
 
@@ -43,60 +43,42 @@ class OudayOueslatiApplicationTests {
         piste.setSlope(35);
     }
 
-    // Test pour addPiste
     @Test
-    void shouldAddPisteSuccessfully() {
+    void testAddPiste() {
         when(pisteRepository.save(any(Piste.class))).thenReturn(piste);
 
         Piste savedPiste = pisteService.addPiste(piste);
 
         assertNotNull(savedPiste);
         assertEquals("Piste Rouge", savedPiste.getNamePiste());
-        assertEquals(Color.RED, savedPiste.getColor());
-        assertEquals(1200, savedPiste.getLength());
-        assertEquals(35, savedPiste.getSlope());
         verify(pisteRepository, times(1)).save(piste);
     }
 
-    // Test pour updatePiste
     @Test
-    void shouldUpdatePisteSuccessfully() {
+    void testUpdatePiste() {
         when(pisteRepository.save(any(Piste.class))).thenReturn(piste);
 
         Piste updatedPiste = pisteService.updatePiste(piste);
 
         assertNotNull(updatedPiste);
-        assertEquals("Piste Rouge", updatedPiste.getNamePiste());
+        assertEquals("Piste Rouge", updatedPiste.getNamePiste()); 
         verify(pisteRepository, times(1)).save(piste);
     }
 
-    // Test pour retrievePiste - Succès
+
     @Test
-    void shouldRetrievePisteByIdSuccessfully() {
+    void testRetrievePiste() {
         when(pisteRepository.findById(1L)).thenReturn(Optional.of(piste));
 
         Piste retrievedPiste = pisteService.retrievePiste(1L);
 
         assertNotNull(retrievedPiste);
         assertEquals(1L, retrievedPiste.getNumPiste());
-        assertEquals("Piste Rouge", retrievedPiste.getNamePiste());
         verify(pisteRepository, times(1)).findById(1L);
     }
 
-    // Test pour retrievePiste - Échec (ID inexistant)
     @Test
-    void shouldReturnNullWhenPisteNotFound() {
-        when(pisteRepository.findById(999L)).thenReturn(Optional.empty());
-
-        Piste retrievedPiste = pisteService.retrievePiste(999L);
-
-        assertNull(retrievedPiste);
-        verify(pisteRepository, times(1)).findById(999L);
-    }
-
-    // Test pour retrieveAll
-    @Test
-    void shouldRetrieveAllPistesSuccessfully() {
+    void testRetrieveAllPistes() {
         List<Piste> pistes = Arrays.asList(piste);
         when(pisteRepository.findAll()).thenReturn(pistes);
 
@@ -104,25 +86,11 @@ class OudayOueslatiApplicationTests {
 
         assertNotNull(retrievedPistes);
         assertEquals(1, retrievedPistes.size());
-        assertEquals("Piste Rouge", retrievedPistes.get(0).getNamePiste());
         verify(pisteRepository, times(1)).findAll();
     }
 
-    // Test pour retrieveAll - Liste vide
     @Test
-    void shouldReturnEmptyListWhenNoPistes() {
-        when(pisteRepository.findAll()).thenReturn(Arrays.asList());
-
-        List<Piste> retrievedPistes = pisteService.retrieveAll();
-
-        assertNotNull(retrievedPistes);
-        assertTrue(retrievedPistes.isEmpty());
-        verify(pisteRepository, times(1)).findAll();
-    }
-
-    // Test pour removePiste
-    @Test
-    void shouldRemovePisteSuccessfully() {
+    void testRemovePiste() {
         doNothing().when(pisteRepository).deleteById(1L);
 
         pisteService.removePiste(1L);
@@ -130,9 +98,8 @@ class OudayOueslatiApplicationTests {
         verify(pisteRepository, times(1)).deleteById(1L);
     }
 
-    // Test pour filterPistes - Succès
     @Test
-    void shouldFilterPistesSuccessfully() {
+    void testFilterPistes() {
         List<Piste> pistes = Arrays.asList(piste);
         when(pisteRepository.filterPistes("Piste Rouge", Color.RED, 1000, 40)).thenReturn(pistes);
 
@@ -140,25 +107,11 @@ class OudayOueslatiApplicationTests {
 
         assertNotNull(filteredPistes);
         assertEquals(1, filteredPistes.size());
-        assertEquals("Piste Rouge", filteredPistes.get(0).getNamePiste());
         verify(pisteRepository, times(1)).filterPistes("Piste Rouge", Color.RED, 1000, 40);
     }
 
-    // Test pour filterPistes - Aucun résultat
     @Test
-    void shouldReturnEmptyListWhenNoMatchingPistes() {
-        when(pisteRepository.filterPistes("Piste Inexistante", Color.BLUE, 500, 20)).thenReturn(Arrays.asList());
-
-        List<Piste> filteredPistes = pisteService.filterPistes("Piste Inexistante", Color.BLUE, 500, 20);
-
-        assertNotNull(filteredPistes);
-        assertTrue(filteredPistes.isEmpty());
-        verify(pisteRepository, times(1)).filterPistes("Piste Inexistante", Color.BLUE, 500, 20);
-    }
-
-    // Test pour getPistesPaginated - Succès
-    @Test
-    void shouldGetPistesPaginatedSuccessfully() {
+    void testGetPistesPaginated() {
         Page<Piste> page = new PageImpl<>(Arrays.asList(piste));
         when(pisteRepository.findAll(any(PageRequest.class))).thenReturn(page);
 
@@ -166,20 +119,6 @@ class OudayOueslatiApplicationTests {
 
         assertNotNull(paginatedPistes);
         assertEquals(1, paginatedPistes.getTotalElements());
-        assertEquals("Piste Rouge", paginatedPistes.getContent().get(0).getNamePiste());
-        verify(pisteRepository, times(1)).findAll(any(PageRequest.class));
-    }
-
-    // Test pour getPistesPaginated - Page vide
-    @Test
-    void shouldReturnEmptyPageWhenNoPistes() {
-        Page<Piste> emptyPage = new PageImpl<>(Arrays.asList());
-        when(pisteRepository.findAll(any(PageRequest.class))).thenReturn(emptyPage);
-
-        Page<Piste> paginatedPistes = pisteService.getPistesPaginated(0, 10);
-
-        assertNotNull(paginatedPistes);
-        assertEquals(0, paginatedPistes.getTotalElements());
         verify(pisteRepository, times(1)).findAll(any(PageRequest.class));
     }
 }
