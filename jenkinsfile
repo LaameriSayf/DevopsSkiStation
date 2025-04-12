@@ -9,7 +9,7 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         IMAGE_NAME = 'ouday2025/devopsskistation'
-        IMAGE_TAG = 'v29' 
+        IMAGE_TAG = 'v29'
     }
 
     stages {
@@ -58,7 +58,6 @@ pipeline {
                         set -e
                         echo "Démarrage de MySQL..."
 
-                        # Créer le réseau mynetwork s'il n'existe pas
                         if ! docker network ls --format '{{.Name}}' | grep -q "^mynetwork$"; then
                             echo "Création du réseau mynetwork..."
                             docker network create mynetwork
@@ -93,7 +92,6 @@ pipeline {
                             exit 1
                         fi
 
-                        # Vérification de la connexion à MySQL
                         echo "Vérification de la connexion à MySQL..."
                         for i in {1..40}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
