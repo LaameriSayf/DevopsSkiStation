@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'test_db'
         DB_USER = 'root'
-        DB_PASS = 'my-secret-pw'
+        DB_PASS = credentials('mysql-password') // Credential ID pour le mot de passe MySQL
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
@@ -148,7 +148,7 @@ pipeline {
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000  // Corrigé en secondes pour cohérence
+                        def duration = (endTime - startTime) / 1000
                         echo "Durée de l'étape Test with Coverage : ${duration}s"
                     }
                 }
@@ -190,7 +190,7 @@ pipeline {
             }
         }
 
-        stage('DOCKER IMAGE') {
+        stage('Docker Image') {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
@@ -202,13 +202,32 @@ pipeline {
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape DOCKER IMAGE : ${duration}s"
+                        echo "Durée de l'étape Docker Image : ${duration}s"
                     }
                 }
             }
         }
 
-        stage('DOCKER HUB') {
+        stage('Scan Docker Image') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Scan de l'image avec Trivy..."
+                        trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Scan Docker Image : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Hub') {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
@@ -222,13 +241,39 @@ pipeline {
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape DOCKER HUB : ${duration}s"
+                        echo "Durée de l'étape Docker Hub : ${duration}s"
                     }
                 }
             }
         }
 
-        stage('DOCKER-COMPOSE') {
+        stage('Deploy to Kubernetes with Helm') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
+                            sh '''
+                            set -e
+                            echo "Déploiement avec Helm..."
+                            helm upgrade --install devopsskistation ./helm/devopsskistation \
+                                --set image.tag=${IMAGE_TAG} \
+                                --namespace default
+                            echo "Vérification du déploiement..."
+                            kubectl rollout status deployment/devopsskistation
+                            echo "Déploiement Kubernetes terminé !"
+                            '''
+                        }
+                    } finally {
+                        def endTime = System.currentTimeMillis()
+                        def duration = (endTime - startTime) / 1000
+                        echo "Durée de l'étape Deploy to Kubernetes with Helm : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Compose') {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
@@ -261,7 +306,7 @@ pipeline {
                     } finally {
                         def endTime = System.currentTimeMillis()
                         def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape DOCKER-COMPOSE : ${duration}s"
+                        echo "Durée de l'étape Docker Compose : ${duration}s"
                     }
                 }
             }
@@ -284,6 +329,26 @@ pipeline {
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
+                    emailext(
+                        subject: "✅ Build #${env.BUILD_NUMBER} réussi - DevopsSkiStation",
+                        body: """
+                        Bonjour,
+
+                        Le build #${env.BUILD_NUMBER} du projet DevopsSkiStation a réussi !
+
+                        Détails :
+                        - Image Docker : ${IMAGE_NAME}:${IMAGE_TAG}
+                        - Déploiement Kubernetes : Effectué avec Helm
+                        - Déploiement Docker Compose : Effectué pour tests locaux
+                        - Rapport SonarQube : ${env.SONAR_HOST_URL}/dashboard?id=${env.SONAR_PROJECT_KEY}
+                        - Logs Jenkins : ${env.BUILD_URL}
+
+                        Cordialement,
+                        Jenkins
+                        """,
+                        to: 'votre.email@example.com',
+                        replyTo: 'jenkins@yourdomain.com'
+                    )
                 } else {
                     sh '''
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
@@ -293,6 +358,25 @@ pipeline {
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
+                    emailext(
+                        subject: "❌ Build #${env.BUILD_NUMBER} échoué - DevopsSkiStation",
+                        body: """
+                        Bonjour,
+
+                        Le build #${env.BUILD_NUMBER} du projet DevopsSkiStation a échoué.
+
+                        Détails :
+                        - Étape échouée : ${currentBuild.currentResult}
+                        - Logs Jenkins : ${env.BUILD_URL}
+
+                        Veuillez vérifier les logs pour plus d'informations.
+
+                        Cordialement,
+                        Jenkins
+                        """,
+                        to: 'votre.email@example.com',
+                        replyTo: 'jenkins@yourdomain.com'
+                    )
                 }
             }
         }
