@@ -192,7 +192,8 @@ pipeline {
                             mvn sonar:sonar
                             '''
                         }
-                        timeout(time: 5, unit: 'MINUTES') {
+                        // Augmenter le timeout à 10 minutes
+                        timeout(time: 10, unit: 'MINUTES') {
                             waitForQualityGate abortPipeline: true
                         }
                         pipelineReport['sonarUrl'] = 'http://192.168.33.10:9000/dashboard?id=tn.esprit%3Aouday_oueslati'
