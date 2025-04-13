@@ -311,7 +311,7 @@ pipeline {
                         pipelineReport['dockerComposeStatus'] = sh(script: '''
                             set -e
                             docker-compose ps --services | while read service; do
-                                status=$(docker-compose ps $service | awk 'NR>2 {print $4}' | grep -E 'Up|Exited' || echo "Unknown")
+                                status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | grep -E 'Up|Exited' || echo "Unknown")
                                 echo "$service $status"
                             done
                         ''', returnStdout: true).trim()
