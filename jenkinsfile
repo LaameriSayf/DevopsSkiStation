@@ -265,71 +265,95 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                if (currentBuild.result == 'SUCCESS') {
-                    sh '''
-                    set -e
-                    echo "Nettoyage de l'environnement (pipeline réussi)..."
-                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                        echo "Arrêt et suppression du conteneur $MYSQL_CONTAINER..."
-                        docker stop $MYSQL_CONTAINER || true
-                        docker rm $MYSQL_CONTAINER || true
-                    fi
-                    if [ -f docker-compose.yml ]; then
-                        echo "Contenu de docker-compose.yml avant arrêt :"
-                        cat docker-compose.yml
-                        echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
-                        echo "Arrêt de Docker Compose..."
-                        docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
-                        echo "Vérification des conteneurs restants..."
-                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
-                        echo "Vérification des réseaux restants..."
-                        docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
-                        echo "Vérification des volumes restants..."
-                        docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
-                    else
-                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
-                    fi
-                    '''
-                    emailext(
-                        subject: "Build #${env.BUILD_NUMBER} - Success",
-                        body: "Build #${env.BUILD_NUMBER} succeeded.\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nLogs: ${env.BUILD_URL}",
-                        to: 'weslatiouday31@gmail.com'
-                    )
-                } else {
-                    sh '''
-                    set -e
-                    echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
-                    if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                        echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
-                        docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
-                    fi
-                    if [ -f docker-compose.yml ]; then
-                        echo "Contenu de docker-compose.yml avant arrêt :"
-                        cat docker-compose.yml
-                        echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
-                        echo "Arrêt de Docker Compose..."
-                        docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
-                        echo "Vérification des conteneurs restants..."
-                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
-                        echo "Vérification des réseaux restants..."
-                        docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
-                        echo "Vérification des volumes restants..."
-                        docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
-                    else
-                        echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
-                    fi
-                    '''
-                    emailext(
-                        subject: "Build #${env.BUILD_NUMBER} - Failed",
-                        body: "Build #${env.BUILD_NUMBER} failed.\nResult: ${currentBuild.currentResult}\nLogs: ${env.BUILD_URL}",
-                        to: 'weslatiouday31@gmail.com'
-                    )
+            always {
+                script {
+                    if (currentBuild.result == 'SUCCESS') {
+                        sh '''
+                            set -e
+                            echo "Nettoyage de l'environnement (pipeline réussi)..."
+                            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                                echo "Arrêt et suppression du conteneur $MYSQL_CONTAINER..."
+                                docker stop $MYSQL_CONTAINER || true
+                                docker rm $MYSQL_CONTAINER || true
+                            fi
+                            if [ -f docker-compose.yml ]; then
+                                echo "Contenu de docker-compose.yml avant arrêt :"
+                                cat docker-compose.yml
+                                echo "Validation de docker-compose.yml..."
+                                docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
+                                echo "Arrêt de Docker Compose..."
+                                docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
+                                echo "Suppression du réseau mynetwork..."
+                                docker network rm mynetwork || true
+                                echo "Vérification des conteneurs restants..."
+                                docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
+                                echo "Vérification des réseaux restants..."
+                                docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
+                                echo "Vérification des volumes restants..."
+                                docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
+                            else
+                                echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                            fi
+                        '''
+                        withCredentials([usernamePassword(credentialsId: 'gmail-app-password', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASS')]) {
+                            emailext(
+                                subject: "Build #${env.BUILD_NUMBER} - Success",
+                                body: "Build #${env.BUILD_NUMBER} succeeded.\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nLogs: ${env.BUILD_URL}",
+                                to: 'weslatiouday31@gmail.com',
+                                mimeType: 'text/plain',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: '587',
+                                auth: true,
+                                authUser: "${SMTP_USER}",
+                                authPassword: "${SMTP_PASS}",
+                                useSsl: false,
+                                useTls: true
+                            )
+                        }
+                    } else {
+                        sh '''
+                            set -e
+                            echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
+                            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                                echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
+                                docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
+                            fi
+                            if [ -f docker-compose.yml ]; then
+                                echo "Contenu de docker-compose.yml avant arrêt :"
+                                cat docker-compose.yml
+                                echo "Validation de docker-compose.yml..."
+                                docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
+                                echo "Arrêt de Docker Compose..."
+                                docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
+                                echo "Suppression du réseau mynetwork..."
+                                docker network rm mynetwork || true
+                                echo "Vérification des conteneurs restants..."
+                                docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
+                                echo "Vérification des réseaux restants..."
+                                docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
+                                echo "Vérification des volumes restants..."
+                                docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
+                            else
+                                echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
+                            fi
+                        '''
+                        withCredentials([usernamePassword(credentialsId: 'gmail-app-password', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASS')]) {
+                            emailext(
+                                subject: "Build #${env.BUILD_NUMBER} - Failed",
+                                body: "Build #${env.BUILD_NUMBER} failed.\nResult: ${currentBuild.currentResult}\nLogs: ${env.BUILD_URL}",
+                                to: 'weslatiouday31@gmail.com',
+                                mimeType: 'text/plain',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: '587',
+                                auth: true,
+                                authUser: "${SMTP_USER}",
+                                authPassword: "${SMTP_PASS}",
+                                useSsl: false,
+                                useTls: true
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
 }
