@@ -295,21 +295,12 @@ pipeline {
                                 echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                             fi
                         '''
-                        withCredentials([usernamePassword(credentialsId: 'gmail-app-password', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASS')]) {
-                            emailext(
-                                subject: "Build #${env.BUILD_NUMBER} - Success",
-                                body: "Build #${env.BUILD_NUMBER} succeeded.\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nLogs: ${env.BUILD_URL}",
-                                to: 'weslatiouday31@gmail.com',
-                                mimeType: 'text/plain',
-                                smtpHost: 'smtp.gmail.com',
-                                smtpPort: '587',
-                                auth: true,
-                                authUser: "${SMTP_USER}",
-                                authPassword: "${SMTP_PASS}",
-                                useSsl: false,
-                                useTls: true
-                            )
-                        }
+                        emailext(
+                            subject: "Build #${env.BUILD_NUMBER} - Success",
+                            body: "Build #${env.BUILD_NUMBER} succeeded.\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nLogs: ${env.BUILD_URL}",
+                            to: 'weslatiouday31@gmail.com',
+                            mimeType: 'text/plain'
+                        )
                     } else {
                         sh '''
                             set -e
@@ -337,21 +328,12 @@ pipeline {
                                 echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                             fi
                         '''
-                        withCredentials([usernamePassword(credentialsId: 'gmail-app-password', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASS')]) {
-                            emailext(
-                                subject: "Build #${env.BUILD_NUMBER} - Failed",
-                                body: "Build #${env.BUILD_NUMBER} failed.\nResult: ${currentBuild.currentResult}\nLogs: ${env.BUILD_URL}",
-                                to: 'weslatiouday31@gmail.com',
-                                mimeType: 'text/plain',
-                                smtpHost: 'smtp.gmail.com',
-                                smtpPort: '587',
-                                auth: true,
-                                authUser: "${SMTP_USER}",
-                                authPassword: "${SMTP_PASS}",
-                                useSsl: false,
-                                useTls: true
-                            )
-                        }
+                        emailext(
+                            subject: "Build #${env.BUILD_NUMBER} - Failed",
+                            body: "Build #${env.BUILD_NUMBER} failed.\nResult: ${currentBuild.currentResult}\nLogs: ${env.BUILD_URL}",
+                            to: 'weslatiouday31@gmail.com',
+                            mimeType: 'text/plain'
+                        )
                     }
                 }
             }
