@@ -323,6 +323,45 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Kubernetes with Helm') {
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification des outils Kubernetes..."
+                        kubectl version --client
+                        helm version
+                        echo "Vérification de la présence du chart Helm..."
+                        if [ -d "helm/devopsskistation" ]; then
+                            echo "Répertoire helm/devopsskistation trouvé."
+                            ls -l helm/devopsskistation
+                        else
+                            echo "Erreur : Répertoire helm/devopsskistation introuvable !"
+                            exit 1
+                        fi
+                        echo "Déploiement avec Helm..."
+                        helm upgrade --install devopsskistation helm/devopsskistation \
+                            --namespace default \
+                            --set image.tag=${IMAGE_TAG} \
+                            --set mysql.secretName=mysql-credentials \
+                            --set mysql.database=${DB_NAME}
+                        echo "Vérification du déploiement..."
+                        kubectl get pods -n default
+                        kubectl get svc -n default
+                        '''
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Deploy to Kubernetes with Helm'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Deploy to Kubernetes with Helm : ${duration}s"
+                    }
+                }
+            }
+        }
     }
 
     post {
