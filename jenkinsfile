@@ -335,16 +335,19 @@ pipeline {
                         echo "Vérification des outils Kubernetes..."
                         kubectl version --client
                         helm version
+                        echo "Contenu du répertoire de travail pour débogage :"
+                        ls -la
                         echo "Vérification de la présence du chart Helm..."
-                        if [ -d "helm/devopsskistation" ]; then
-                            echo "Répertoire helm/devopsskistation trouvé."
-                            ls -l helm/devopsskistation
+                        if [ -d "helm" ]; then
+                            echo "Répertoire helm trouvé."
+                            ls -l helm
                         else
-                            echo "Erreur : Répertoire helm/devopsskistation introuvable !"
+                            echo "Erreur : Répertoire helm introuvable !"
+                            echo "Vérifiez que le répertoire helm est inclus dans la branche ouday du dépôt Git."
                             exit 1
                         fi
                         echo "Déploiement avec Helm..."
-                        helm upgrade --install devopsskistation helm/devopsskistation \
+                        helm upgrade --install devopsskistation helm \
                             --namespace default \
                             --set image.tag=${IMAGE_TAG} \
                             --set mysql.secretName=mysql-credentials \
