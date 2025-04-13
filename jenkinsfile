@@ -256,7 +256,8 @@ pipeline {
                         def trivyOutput = sh(script: '''
                         set -e
                         echo "Scan de l'image avec Trivy..."
-                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} | grep 'Total:' || true
+                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt
+                        cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found"
                         ''', returnStdout: true).trim()
                         pipelineReport['trivyResults'] = trivyOutput ?: 'No vulnerabilities found'
                     } finally {
@@ -306,7 +307,7 @@ pipeline {
                         echo "Vérification des conteneurs lancés..."
                         docker-compose ps
                         '''
-                        pipelineReport['dockerComposeStatus'] = sh(script: "docker-compose ps | awk 'NR>2 {print \$1, \$6}' || true", returnStdout: true).trim()
+                        pipelineReport['dockerComposeStatus'] = sh(script: "docker-compose ps | awk 'NR>2 {print \$1, \$6, \$7}' || true", returnStdout: true).trim()
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Docker Compose'] = duration
