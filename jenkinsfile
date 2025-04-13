@@ -16,13 +16,15 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    // Définir pipelineReport globalement
-                    pipelineReport = [:]
+                    // Déclarer pipelineReport avec def pour éviter l'avertissement
+                    def pipelineReport = [:]
                     pipelineReport['stages'] = [:]
                     pipelineReport['testResults'] = [:]
                     pipelineReport['trivyResults'] = ''
                     pipelineReport['sonarUrl'] = ''
                     pipelineReport['dockerComposeStatus'] = ''
+                    // Stocker dans l'environnement pour accès global
+                    env.pipelineReport = pipelineReport.inspect()
                 }
             }
         }
@@ -30,12 +32,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         git branch: 'ouday', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Checkout'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Checkout : ${duration}s"
                     }
                 }
@@ -45,6 +49,7 @@ pipeline {
         stage('Test Docker') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -57,6 +62,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Test Docker'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Test Docker : ${duration}s"
                     }
                 }
@@ -66,6 +72,7 @@ pipeline {
         stage('Start MySQL') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -120,6 +127,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Start MySQL'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Start MySQL : ${duration}s"
                     }
                 }
@@ -129,6 +137,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -138,6 +147,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Build'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Build : ${duration}s"
                     }
                 }
@@ -147,6 +157,7 @@ pipeline {
         stage('Test with Coverage') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -164,6 +175,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Test with Coverage'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Test with Coverage : ${duration}s"
                     }
                 }
@@ -173,6 +185,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         withSonarQubeEnv('SQ1') {
@@ -185,6 +198,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['SonarQube Analysis'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape SonarQube Analysis : ${duration}s"
                     }
                 }
@@ -194,6 +208,7 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -204,6 +219,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Deploy to Nexus'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Deploy to Nexus : ${duration}s"
                     }
                 }
@@ -213,6 +229,7 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -225,6 +242,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Pull Docker Image'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Pull Docker Image : ${duration}s"
                     }
                 }
@@ -234,17 +252,19 @@ pipeline {
         stage('Scan Docker Image') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         def trivyOutput = sh(script: '''
                         set -e
                         echo "Scan de l'image avec Trivy..."
-                        nice -n 10 trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} | grep 'Total:' || true
+                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} | grep 'Total:' || true
                         ''', returnStdout: true).trim()
                         pipelineReport['trivyResults'] = trivyOutput ?: 'No vulnerabilities found'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Scan Docker Image'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Scan Docker Image : ${duration}s"
                     }
                 }
@@ -254,6 +274,7 @@ pipeline {
         stage('Docker Compose') {
             steps {
                 script {
+                    def pipelineReport = evaluate(env.pipelineReport)
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -269,10 +290,10 @@ pipeline {
                         echo "Vérification de l'image Docker..."
                         docker images | grep ${IMAGE_NAME}
                         echo "Vérification et arrêt du conteneur mysql-test..."
-                        if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
+                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "Arrêt et suppression du conteneur mysql-test..."
-                            docker stop mysql-test || true
-                            docker rm mysql-test || true
+                            docker stop $MYSQL_CONTAINER || true
+                            docker rm $MYSQL_CONTAINER || true
                         fi
                         echo "Vérification des ports utilisés..."
                         docker ps -a --format '{{.Names}} {{.Ports}}'
@@ -287,10 +308,11 @@ pipeline {
                         echo "Vérification des conteneurs lancés..."
                         docker-compose ps
                         '''
-                        pipelineReport['dockerComposeStatus'] = sh(script: 'docker-compose ps --format "{{.Name}} {{.Status}}"', returnStdout: true).trim()
+                        pipelineReport['dockerComposeStatus'] = sh(script: "docker-compose ps | awk 'NR>2 {print \$1, \$4}'", returnStdout: true).trim()
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Docker Compose'] = duration
+                        env.pipelineReport = pipelineReport.inspect()
                         echo "Durée de l'étape Docker Compose : ${duration}s"
                     }
                 }
@@ -301,6 +323,7 @@ pipeline {
     post {
         always {
             script {
+                def pipelineReport = evaluate(env.pipelineReport)
                 // Générer le corps de l'email
                 def emailBody = """
                 <html>
@@ -345,7 +368,7 @@ pipeline {
                     sh '''
                         set -e
                         echo "Nettoyage de l'environnement (pipeline réussi)..."
-                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
                             echo "Arrêt et suppression du conteneur $MYSQL_CONTAINER..."
                             docker stop $MYSQL_CONTAINER || true
                             docker rm $MYSQL_CONTAINER || true
@@ -377,11 +400,12 @@ pipeline {
                     )
                 } else {
                     sh '''
-                        set -e
                         echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
-                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
                             echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
                             docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
+                        else
+                            echo "Conteneur $MYSQL_CONTAINER non trouvé, probablement déjà supprimé."
                         fi
                         if [ -f docker-compose.yml ]; then
                             echo "Contenu de docker-compose.yml avant arrêt :"
