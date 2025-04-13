@@ -20,8 +20,7 @@ pipeline {
                     try {
                         git branch: 'ouday', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Checkout : ${duration}s"
                     }
                 }
@@ -41,8 +40,7 @@ pipeline {
                         docker ps
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Test Docker : ${duration}s"
                     }
                 }
@@ -57,12 +55,10 @@ pipeline {
                         sh '''
                         set -e
                         echo "Démarrage de MySQL..."
-
                         if ! docker network ls --format '{{.Name}}' | grep -q "^mynetwork$"; then
                             echo "Création du réseau mynetwork..."
                             docker network create mynetwork
                         fi
-
                         if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                                 echo "Le conteneur MySQL est déjà en cours d'exécution."
@@ -81,17 +77,13 @@ pipeline {
                                 --cpus="2" \
                                 -d mysql:8.0
                         fi
-
                         echo "Attente de MySQL (90 sec)..."
                         sleep 90
-
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
-                            echo "Logs du conteneur MySQL :"
                             docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
-
                         echo "Vérification de la connexion à MySQL..."
                         for i in {1..40}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
@@ -103,17 +95,14 @@ pipeline {
                             echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
                             sleep 3
                         done
-
                         if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
                             echo "Échec de la connexion à MySQL après 40 tentatives !"
-                            echo "Logs du conteneur MySQL :"
                             docker logs $MYSQL_CONTAINER
                             exit 1
                         fi
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Start MySQL : ${duration}s"
                     }
                 }
@@ -130,8 +119,7 @@ pipeline {
                         mvn clean compile
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Build : ${duration}s"
                     }
                 }
@@ -149,8 +137,7 @@ pipeline {
                         mvn test
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Test with Coverage : ${duration}s"
                     }
                 }
@@ -169,8 +156,7 @@ pipeline {
                             '''
                         }
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape SonarQube Analysis : ${duration}s"
                     }
                 }
@@ -188,8 +174,7 @@ pipeline {
                         mvn deploy -DskipTests
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Deploy to Nexus : ${duration}s"
                     }
                 }
@@ -209,8 +194,7 @@ pipeline {
                         docker pull ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Pull Docker Image : ${duration}s"
                     }
                 }
@@ -228,56 +212,8 @@ pipeline {
                         nice -n 10 trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Scan Docker Image : ${duration}s"
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes with Helm') {
-            steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        echo "Vérification préliminaire pour Kubernetes..."
-                        sh '''
-                        set -e
-                        echo "Vérification des outils..."
-                        which kubectl || echo "Erreur : kubectl non trouvé"
-                        which helm || echo "Erreur : helm non trouvé"
-                        echo "Vérification de la version des outils..."
-                        kubectl version --client || echo "Erreur : kubectl non fonctionnel"
-                        helm version || echo "Erreur : helm non fonctionnel"
-                        '''
-                        withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
-                            sh '''
-                            set -e
-                            echo "Vérification de la configuration Kubernetes..."
-                            kubectl config view --raw || echo "Erreur : impossible d'afficher la configuration"
-                            echo "Test de la connexion au cluster..."
-                            kubectl get nodes || echo "Erreur : échec de la connexion au cluster"
-                            echo "Vérification des fichiers Helm..."
-                            ls -la ./helm/devopsskistation || echo "Erreur : répertoire Helm introuvable"
-                            echo "Liste des releases Helm..."
-                            helm list --namespace default || echo "Erreur : échec de la commande helm list"
-                            echo "Déploiement avec Helm..."
-                            helm upgrade --install devopsskistation ./helm/devopsskistation \
-                                --set image.tag=${IMAGE_TAG} \
-                                --namespace default
-                            echo "Vérification du déploiement..."
-                            kubectl rollout status deployment/devopsskistation
-                            echo "Déploiement Kubernetes terminé !"
-                            '''
-                        }
-                    } catch (Exception e) {
-                        echo "Erreur dans Deploy to Kubernetes with Helm : ${e.getMessage()}"
-                        throw e
-                    } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Deploy to Kubernetes with Helm : ${duration}s"
                     }
                 }
             }
@@ -313,15 +249,14 @@ pipeline {
                         echo "Vérification de la valeur de IMAGE_TAG..."
                         echo "IMAGE_TAG=${IMAGE_TAG}"
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
+                        docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
                         echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
                         docker-compose up -d
                         echo "Vérification des conteneurs lancés..."
                         docker-compose ps
                         '''
                     } finally {
-                        def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
                         echo "Durée de l'étape Docker Compose : ${duration}s"
                     }
                 }
@@ -345,24 +280,23 @@ pipeline {
                         echo "Contenu de docker-compose.yml avant arrêt :"
                         cat docker-compose.yml
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
+                        docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || echo "Erreur : échec de docker-compose down"
+                        docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
                         echo "Vérification des conteneurs restants..."
-                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps"
+                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
+                        echo "Vérification des réseaux restants..."
+                        docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
+                        echo "Vérification des volumes restants..."
+                        docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
                     emailext(
                         subject: "Build #${env.BUILD_NUMBER} - Success",
-                        body: """
-                        Build #${env.BUILD_NUMBER} succeeded.
-                        Details:
-                        - Image: ${IMAGE_NAME}:${IMAGE_TAG}
-                        - Logs: ${env.BUILD_URL}
-                        """,
-                        to: 'ouday.oueslati@esprit.tn'
+                        body: "Build #${env.BUILD_NUMBER} succeeded.\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nLogs: ${env.BUILD_URL}",
+                        to: 'weslatiouday31@gmail.com'
                     )
                 } else {
                     sh '''
@@ -370,29 +304,29 @@ pipeline {
                     echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
                     if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                         echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
+                        docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
                     fi
                     if [ -f docker-compose.yml ]; then
                         echo "Contenu de docker-compose.yml avant arrêt :"
                         cat docker-compose.yml
                         echo "Validation de docker-compose.yml..."
-                        docker-compose config || echo "Erreur : échec de la validation Docker Compose"
+                        docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                         echo "Arrêt de Docker Compose..."
-                        docker-compose down || echo "Erreur : échec de docker-compose down"
+                        docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
                         echo "Vérification des conteneurs restants..."
-                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps"
+                        docker ps -a --format '{{.Names}}' || echo "Erreur : échec de docker ps" >&2
+                        echo "Vérification des réseaux restants..."
+                        docker network ls --format '{{.Name}}' || echo "Erreur : échec de docker network ls" >&2
+                        echo "Vérification des volumes restants..."
+                        docker volume ls --format '{{.Name}}' || echo "Erreur : échec de docker volume ls" >&2
                     else
                         echo "Aucun fichier docker-compose.yml trouvé, pas de nettoyage Docker Compose nécessaire."
                     fi
                     '''
                     emailext(
                         subject: "Build #${env.BUILD_NUMBER} - Failed",
-                        body: """
-                        Build #${env.BUILD_NUMBER} failed.
-                        Details:
-                        - Result: ${currentBuild.currentResult}
-                        - Logs: ${env.BUILD_URL}
-                        """,
-                        to: 'ouday.oueslati@esprit.tn'
+                        body: "Build #${env.BUILD_NUMBER} failed.\nResult: ${currentBuild.currentResult}\nLogs: ${env.BUILD_URL}",
+                        to: 'weslatiouday31@gmail.com'
                     )
                 }
             }
