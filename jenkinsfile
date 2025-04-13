@@ -192,8 +192,8 @@ pipeline {
                             mvn sonar:sonar
                             '''
                         }
-                        // Augmenter le timeout à 10 minutes
-                        timeout(time: 10, unit: 'MINUTES') {
+                        // Timeout augmenté à 15 minutes
+                        timeout(time: 15, unit: 'MINUTES') {
                             waitForQualityGate abortPipeline: true
                         }
                         pipelineReport['sonarUrl'] = 'http://192.168.33.10:9000/dashboard?id=tn.esprit%3Aouday_oueslati'
@@ -389,6 +389,9 @@ pipeline {
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                             echo "Arrêt de Docker Compose..."
                             docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
+                            echo "Arrêt du conteneur mysql-test avant suppression du réseau..."
+                            docker stop $MYSQL_CONTAINER || true
+                            docker rm $MYSQL_CONTAINER || true
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
@@ -423,6 +426,9 @@ pipeline {
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                             echo "Arrêt de Docker Compose..."
                             docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
+                            echo "Arrêt du conteneur mysql-test avant suppression du réseau..."
+                            docker stop $MYSQL_CONTAINER || true
+                            docker rm $MYSQL_CONTAINER || true
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
