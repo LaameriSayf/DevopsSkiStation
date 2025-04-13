@@ -1,11 +1,5 @@
 pipeline {
     agent any
-    def pipelineReport = [:]
-    pipelineReport['stages'] = [:]
-    pipelineReport['testResults'] = [:]
-    pipelineReport['trivyResults'] = ''
-    pipelineReport['sonarUrl'] = ''
-    pipelineReport['dockerComposeStatus'] = ''
 
     environment {
         DB_NAME = 'test_db'
@@ -19,6 +13,20 @@ pipeline {
     }
 
     stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    // Définir pipelineReport globalement
+                    pipelineReport = [:]
+                    pipelineReport['stages'] = [:]
+                    pipelineReport['testResults'] = [:]
+                    pipelineReport['trivyResults'] = ''
+                    pipelineReport['sonarUrl'] = ''
+                    pipelineReport['dockerComposeStatus'] = ''
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 script {
