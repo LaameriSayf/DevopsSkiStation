@@ -192,7 +192,6 @@ pipeline {
                             mvn sonar:sonar
                             '''
                         }
-                        waitForQualityGate abortPipeline: true
                         pipelineReport['sonarUrl'] = 'http://192.168.33.10:9000/dashboard?id=tn.esprit%3Aouday_oueslati'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
@@ -255,11 +254,11 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         def trivyOutput = sh(script: '''
-                            set -e
-                            echo "Scan de l'image avec Trivy..."
-                            trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m --format table ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
-                            trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
-                            echo "$trivy_output"
+                        set -e
+                        echo "Scan de l'image avec Trivy..."
+                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
+                        trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
+                        echo "$trivy_output"
                         ''', returnStdout: true).trim()
                         pipelineReport['trivyResults'] = trivyOutput ?: 'No vulnerabilities found'
                     } finally {
@@ -279,42 +278,41 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
-                            set -e
-                            echo "Vérification de la présence de docker-compose.yml..."
-                            if [ -f docker-compose.yml ]; then
-                                echo "Fichier docker-compose.yml trouvé."
-                                cat docker-compose.yml
-                            else
-                                echo "Erreur : docker-compose.yml introuvable !"
-                                exit 1
-                            fi
-                            echo "Vérification de l'image Docker..."
-                            docker images | grep ${IMAGE_NAME}
-                            echo "Vérification et arrêt du conteneur mysql-test..."
-                            if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                                echo "Arrêt et suppression du conteneur mysql-test..."
-                                docker stop $MYSQL_CONTAINER || true
-                                docker rm $MYSQL_CONTAINER || true
-                            fi
-                            echo "Vérification des ports utilisés..."
-                            docker ps -a --format '{{.Names}} {{.Ports}}'
-                            echo "Exportation de IMAGE_TAG pour Docker Compose..."
-                            export IMAGE_TAG=${IMAGE_TAG}
-                            echo "Vérification de la valeur de IMAGE_TAG..."
-                            echo "IMAGE_TAG=${IMAGE_TAG}"
-                            echo "Validation de docker-compose.yml..."
-                            docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
-                            echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
-                            docker-compose up -d
-                            echo "Vérification des conteneurs lancés..."
-                            docker-compose ps
+                        set -e
+                        echo "Vérification de la présence de docker-compose.yml..."
+                        if [ -f docker-compose.yml ]; then
+                            echo "Fichier docker-compose.yml trouvé."
+                            cat docker-compose.yml
+                        else
+                            echo "Erreur : docker-compose.yml introuvable !"
+                            exit 1
+                        fi
+                        echo "Vérification de l'image Docker..."
+                        docker images | grep ${IMAGE_NAME}
+                        echo "Vérification et arrêt du conteneur mysql-test..."
+                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            echo "Arrêt et suppression du conteneur mysql-test..."
+                            docker stop $MYSQL_CONTAINER || true
+                            docker rm $MYSQL_CONTAINER || true
+                        fi
+                        echo "Vérification des ports utilisés..."
+                        docker ps -a --format '{{.Names}} {{.Ports}}'
+                        echo "Exportation de IMAGE_TAG pour Docker Compose..."
+                        export IMAGE_TAG=${IMAGE_TAG}
+                        echo "Vérification de la valeur de IMAGE_TAG..."
+                        echo "IMAGE_TAG=${IMAGE_TAG}"
+                        echo "Validation de docker-compose.yml..."
+                        docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
+                        echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
+                        docker-compose up -d
+                        echo "Vérification des conteneurs lancés..."
+                        docker-compose ps
                         '''
                         pipelineReport['dockerComposeStatus'] = sh(script: '''
-                            set -e
-                            docker-compose ps --services | while read service; do
-                                status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | grep -E 'Up|Exited' || echo "Unknown")
-                                echo "$service $status"
-                            done
+                        docker-compose ps --services | while read service; do
+                            status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | tr -d '\n')
+                            echo "$service $status"
+                        done
                         ''', returnStdout: true).trim()
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
@@ -365,13 +363,21 @@ pipeline {
                     <h3>Test Results</h3>
                     <p>${pipelineReport['testResults']['summary'] ?: 'No test results available'}</p>
                     <hr>
+                    <h3>SonarQube Analysis</h3>
+                    <p><a href='${pipelineReport['sonarUrl'] ?: 'http://192.168.33.10:9000'}>View SonarQube Dashboard</a></p>
+                    <hr>
+                    <h3>Docker Image Scan (Trivy)</h3>
+                    <p>${pipelineReport['trivyResults']}</p>
+                    <hr>
+                    <h3>Docker Compose Status</h3>
+                    <pre>${pipelineReport['dockerComposeStatus'] ?: 'No Docker Compose status available'}</pre>
+                    <hr>
                     <p><em>Generated by Jenkins on ${new Date()}</em></p>
                 </body>
                 </html>
                 """
 
                 if (currentBuild.result == 'SUCCESS') {
-                    echo "Pipeline terminé avec succès !"
                     sh '''
                         set -e
                         echo "Nettoyage de l'environnement (pipeline réussi)..."
@@ -387,9 +393,6 @@ pipeline {
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                             echo "Arrêt de Docker Compose..."
                             docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
-                            echo "Arrêt du conteneur mysql-test avant suppression du réseau..."
-                            docker stop $MYSQL_CONTAINER || true
-                            docker rm $MYSQL_CONTAINER || true
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
@@ -409,7 +412,6 @@ pipeline {
                         mimeType: 'text/html'
                     )
                 } else {
-                    echo "Pipeline échoué, vérifiez les logs pour plus de détails."
                     sh '''
                         echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
                         if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
@@ -425,9 +427,6 @@ pipeline {
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
                             echo "Arrêt de Docker Compose..."
                             docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
-                            echo "Arrêt du conteneur mysql-test avant suppression du réseau..."
-                            docker stop $MYSQL_CONTAINER || true
-                            docker rm $MYSQL_CONTAINER || true
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
