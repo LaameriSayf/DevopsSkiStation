@@ -16,15 +16,16 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    // Déclarer pipelineReport avec def pour éviter l'avertissement
+                    // Déclarer pipelineReport avec def
                     def pipelineReport = [:]
                     pipelineReport['stages'] = [:]
                     pipelineReport['testResults'] = [:]
                     pipelineReport['trivyResults'] = ''
                     pipelineReport['sonarUrl'] = ''
                     pipelineReport['dockerComposeStatus'] = ''
-                    // Stocker dans l'environnement pour accès global
-                    env.pipelineReport = pipelineReport.inspect()
+                    // Serialize to JSON instead of inspect()
+                    writeJSON file: 'pipelineReport.json', json: pipelineReport
+                    env.pipelineReportFile = 'pipelineReport.json'
                 }
             }
         }
@@ -32,14 +33,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         git branch: 'ouday', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Checkout'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Checkout : ${duration}s"
                     }
                 }
@@ -49,7 +50,7 @@ pipeline {
         stage('Test Docker') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -62,7 +63,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Test Docker'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Test Docker : ${duration}s"
                     }
                 }
@@ -72,7 +73,7 @@ pipeline {
         stage('Start MySQL') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -127,7 +128,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Start MySQL'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Start MySQL : ${duration}s"
                     }
                 }
@@ -137,7 +138,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -147,7 +148,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Build'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Build : ${duration}s"
                     }
                 }
@@ -157,7 +158,7 @@ pipeline {
         stage('Test with Coverage') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -165,7 +166,6 @@ pipeline {
                         echo "Exécution des tests avec couverture..."
                         mvn test
                         '''
-                        // Capturer le rapport Surefire
                         def surefireReport = sh(script: "cat target/surefire-reports/*.txt | grep 'Tests run:' || true", returnStdout: true).trim()
                         if (surefireReport) {
                             pipelineReport['testResults']['summary'] = surefireReport
@@ -175,7 +175,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Test with Coverage'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Test with Coverage : ${duration}s"
                     }
                 }
@@ -185,7 +185,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         withSonarQubeEnv('SQ1') {
@@ -198,7 +198,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['SonarQube Analysis'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape SonarQube Analysis : ${duration}s"
                     }
                 }
@@ -208,7 +208,7 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -219,7 +219,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Deploy to Nexus'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Deploy to Nexus : ${duration}s"
                     }
                 }
@@ -229,7 +229,7 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -242,7 +242,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Pull Docker Image'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Pull Docker Image : ${duration}s"
                     }
                 }
@@ -252,7 +252,7 @@ pipeline {
         stage('Scan Docker Image') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         def trivyOutput = sh(script: '''
@@ -264,7 +264,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Scan Docker Image'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Scan Docker Image : ${duration}s"
                     }
                 }
@@ -274,7 +274,7 @@ pipeline {
         stage('Docker Compose') {
             steps {
                 script {
-                    def pipelineReport = evaluate(env.pipelineReport)
+                    def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
@@ -312,7 +312,7 @@ pipeline {
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Docker Compose'] = duration
-                        env.pipelineReport = pipelineReport.inspect()
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
                         echo "Durée de l'étape Docker Compose : ${duration}s"
                     }
                 }
@@ -323,8 +323,17 @@ pipeline {
     post {
         always {
             script {
-                def pipelineReport = evaluate(env.pipelineReport)
-                // Générer le corps de l'email
+                def pipelineReport = [:]
+                if (fileExists(env.pipelineReportFile ?: 'pipelineReport.json')) {
+                    pipelineReport = readJSON file: env.pipelineReportFile
+                } else {
+                    echo "No pipelineReport found, initializing empty report"
+                    pipelineReport['stages'] = [:]
+                    pipelineReport['testResults'] = [:]
+                    pipelineReport['trivyResults'] = 'Not executed'
+                    pipelineReport['sonarUrl'] = 'Not executed'
+                    pipelineReport['dockerComposeStatus'] = 'Not executed'
+                }
                 def emailBody = """
                 <html>
                 <body style='font-family: Arial, sans-serif; color: #333;'>
@@ -342,7 +351,7 @@ pipeline {
                             <th style='padding: 8px;'>Duration (s)</th>
                         </tr>
                         ${pipelineReport['stages'].collect { stage, duration ->
-                            "<tr><td style='padding: 8px;'>${stage}</td><td style='padding: 8px;'>${duration}</td></tr>"
+                            "<tr><td style='padding: 8px;'>${stage}</td><td style='padding: 8px;'>${duration ?: 'Not executed'}</td></tr>"
                         }.join('\n')}
                     </table>
                     <hr>
@@ -350,7 +359,7 @@ pipeline {
                     <p>${pipelineReport['testResults']['summary'] ?: 'No test results available'}</p>
                     <hr>
                     <h3>SonarQube Analysis</h3>
-                    <p><a href='${pipelineReport['sonarUrl']}'>View SonarQube Dashboard</a></p>
+                    <p><a href='${pipelineReport['sonarUrl'] ?: 'http://192.168.33.10:9000'}>View SonarQube Dashboard</a></p>
                     <hr>
                     <h3>Docker Image Scan (Trivy)</h3>
                     <p>${pipelineReport['trivyResults']}</p>
@@ -363,7 +372,6 @@ pipeline {
                 </html>
                 """
 
-                // Nettoyage
                 if (currentBuild.result == 'SUCCESS') {
                     sh '''
                         set -e
