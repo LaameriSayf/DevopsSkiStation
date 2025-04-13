@@ -192,10 +192,7 @@ pipeline {
                             mvn sonar:sonar
                             '''
                         }
-                        // Timeout augmenté à 15 minutes
-                        timeout(time: 15, unit: 'MINUTES') {
-                            waitForQualityGate abortPipeline: true
-                        }
+                        waitForQualityGate abortPipeline: true
                         pipelineReport['sonarUrl'] = 'http://192.168.33.10:9000/dashboard?id=tn.esprit%3Aouday_oueslati'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
@@ -374,6 +371,7 @@ pipeline {
                 """
 
                 if (currentBuild.result == 'SUCCESS') {
+                    echo "Pipeline terminé avec succès !"
                     sh '''
                         set -e
                         echo "Nettoyage de l'environnement (pipeline réussi)..."
@@ -411,6 +409,7 @@ pipeline {
                         mimeType: 'text/html'
                     )
                 } else {
+                    echo "Pipeline échoué, vérifiez les logs pour plus de détails."
                     sh '''
                         echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
                         if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
