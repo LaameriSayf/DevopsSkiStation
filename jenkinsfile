@@ -192,6 +192,9 @@ pipeline {
                             mvn sonar:sonar
                             '''
                         }
+                        timeout(time: 5, unit: 'MINUTES') {
+                            waitForQualityGate abortPipeline: true
+                        }
                         pipelineReport['sonarUrl'] = 'http://192.168.33.10:9000/dashboard?id=tn.esprit%3Aouday_oueslati'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
