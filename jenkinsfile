@@ -254,11 +254,11 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         def trivyOutput = sh(script: '''
-                        set -e
-                        echo "Scan de l'image avec Trivy..."
-                        trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
-                        trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
-                        echo "$trivy_output"
+                            set -e
+                            echo "Scan de l'image avec Trivy..."
+                            trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m --format table ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
+                            trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
+                            echo "$trivy_output"
                         ''', returnStdout: true).trim()
                         pipelineReport['trivyResults'] = trivyOutput ?: 'No vulnerabilities found'
                     } finally {
@@ -278,41 +278,42 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
-                        set -e
-                        echo "Vérification de la présence de docker-compose.yml..."
-                        if [ -f docker-compose.yml ]; then
-                            echo "Fichier docker-compose.yml trouvé."
-                            cat docker-compose.yml
-                        else
-                            echo "Erreur : docker-compose.yml introuvable !"
-                            exit 1
-                        fi
-                        echo "Vérification de l'image Docker..."
-                        docker images | grep ${IMAGE_NAME}
-                        echo "Vérification et arrêt du conteneur mysql-test..."
-                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            echo "Arrêt et suppression du conteneur mysql-test..."
-                            docker stop $MYSQL_CONTAINER || true
-                            docker rm $MYSQL_CONTAINER || true
-                        fi
-                        echo "Vérification des ports utilisés..."
-                        docker ps -a --format '{{.Names}} {{.Ports}}'
-                        echo "Exportation de IMAGE_TAG pour Docker Compose..."
-                        export IMAGE_TAG=${IMAGE_TAG}
-                        echo "Vérification de la valeur de IMAGE_TAG..."
-                        echo "IMAGE_TAG=${IMAGE_TAG}"
-                        echo "Validation de docker-compose.yml..."
-                        docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
-                        echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
-                        docker-compose up -d
-                        echo "Vérification des conteneurs lancés..."
-                        docker-compose ps
+                            set -e
+                            echo "Vérification de la présence de docker-compose.yml..."
+                            if [ -f docker-compose.yml ]; then
+                                echo "Fichier docker-compose.yml trouvé."
+                                cat docker-compose.yml
+                            else
+                                echo "Erreur : docker-compose.yml introuvable !"
+                                exit 1
+                            fi
+                            echo "Vérification de l'image Docker..."
+                            docker images | grep ${IMAGE_NAME}
+                            echo "Vérification et arrêt du conteneur mysql-test..."
+                            if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                                echo "Arrêt et suppression du conteneur mysql-test..."
+                                docker stop $MYSQL_CONTAINER || true
+                                docker rm $MYSQL_CONTAINER || true
+                            fi
+                            echo "Vérification des ports utilisés..."
+                            docker ps -a --format '{{.Names}} {{.Ports}}'
+                            echo "Exportation de IMAGE_TAG pour Docker Compose..."
+                            export IMAGE_TAG=${IMAGE_TAG}
+                            echo "Vérification de la valeur de IMAGE_TAG..."
+                            echo "IMAGE_TAG=${IMAGE_TAG}"
+                            echo "Validation de docker-compose.yml..."
+                            docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
+                            echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
+                            docker-compose up -d
+                            echo "Vérification des conteneurs lancés..."
+                            docker-compose ps
                         '''
                         pipelineReport['dockerComposeStatus'] = sh(script: '''
-                        docker-compose ps --services | while read service; do
-                            status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | tr -d '\n')
-                            echo "$service $status"
-                        done
+                            set -e
+                            docker-compose ps --services | while read service; do
+                                status=$(docker-compose ps $service | awk 'NR>2 {print $4}' | grep -E 'Up|Exited' || echo "Unknown")
+                                echo "$service $status"
+                            done
                         ''', returnStdout: true).trim()
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
