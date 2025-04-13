@@ -16,14 +16,12 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    // Déclarer pipelineReport avec def
                     def pipelineReport = [:]
                     pipelineReport['stages'] = [:]
                     pipelineReport['testResults'] = [:]
                     pipelineReport['trivyResults'] = ''
                     pipelineReport['sonarUrl'] = ''
                     pipelineReport['dockerComposeStatus'] = ''
-                    // Serialize to JSON instead of inspect()
                     writeJSON file: 'pipelineReport.json', json: pipelineReport
                     env.pipelineReportFile = 'pipelineReport.json'
                 }
@@ -308,7 +306,7 @@ pipeline {
                         echo "Vérification des conteneurs lancés..."
                         docker-compose ps
                         '''
-                        pipelineReport['dockerComposeStatus'] = sh(script: "docker-compose ps | awk 'NR>2 {print \$1, \$4}'", returnStdout: true).trim()
+                        pipelineReport['dockerComposeStatus'] = sh(script: "docker-compose ps | awk 'NR>2 {print \$1, \$6}' || true", returnStdout: true).trim()
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Docker Compose'] = duration
