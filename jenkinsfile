@@ -93,14 +93,14 @@ pipeline {
                             docker run --name $MYSQL_CONTAINER \
                                 --network mynetwork \
                                 -e MYSQL_DATABASE=$DB_NAME \
-                                -e MYSQL_ROOT_PASSWORD=$DB_PASS \
+                                -e MYSQL_ROOT_PASSWORD="$DB_PASS" \
                                 -p $DB_PORT:3306 \
                                 --memory="1g" \
                                 --cpus="2" \
                                 -d mysql:8.0
                         fi
-                        echo "Attente de MySQL (90 sec)..."
-                        sleep 90
+                        echo "Attente de MySQL (120 sec)..."
+                        sleep 120
                         if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
                             echo "MySQL n'a pas démarré !"
                             docker logs $MYSQL_CONTAINER
@@ -110,14 +110,19 @@ pipeline {
                         for i in {1..40}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
                             docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
-                            if docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
+                            # Ajout de logs pour vérifier les ports
+                            echo "Vérification des ports exposés..."
+                            docker port $MYSQL_CONTAINER
+                            # Utilisation d'une commande plus robuste pour tester la connexion
+                            if docker exec $MYSQL_CONTAINER sh -c "mysql -uroot -p\\"$DB_PASS\\" -e 'SELECT 1;'" > /dev/null 2>&1; then
                                 echo "MySQL est prêt !"
                                 break
                             fi
                             echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
+                            docker logs $MYSQL_CONTAINER | tail -n 10
                             sleep 3
                         done
-                        if ! docker exec $MYSQL_CONTAINER mysql -u$DB_USER -p$DB_PASS -e "SELECT 1;" > /dev/null 2>&1; then
+                        if ! docker exec $MYSQL_CONTAINER sh -c "mysql -uroot -p\\"$DB_PASS\\" -e 'SELECT 1;'" > /dev/null 2>&1; then
                             echo "Échec de la connexion à MySQL après 40 tentatives !"
                             docker logs $MYSQL_CONTAINER
                             exit 1
