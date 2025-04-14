@@ -82,19 +82,17 @@
 		</plugins>
 	</build>
 
+
 	<distributionManagement>
 		<repository>
-			<id>github-repository</id>
-			<url>https://maven.pkg.github.com/LaameriSayf/DevopsSkiStation</url>
-			<layout>default</layout>
+			<id>nexus</id>
+			<url>http://192.168.33.10/repository/maven-releases/</url>
 		</repository>
-
 		<snapshotRepository>
-			<id>nexus-snapshots</id>
+			<id>nexus</id>
 			<url>http://192.168.33.10/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
-
 
 
 </project>
