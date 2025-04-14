@@ -91,7 +91,7 @@
 
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
-			<url>http://192.168.33.10/repository/maven-snapshots/</url>
+			<url>http://192.168.33.10/repository/maven-releases/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
