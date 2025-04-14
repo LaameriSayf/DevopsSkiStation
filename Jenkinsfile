@@ -8,29 +8,28 @@ pipeline {
         NEXUS_PROTOCOL = 'http'
         NEXUS_HOST = '192.168.33.10'
         NEXUS_PORT = '8081'
-        NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
         NEXUS_REPO = 'gestionski'
+        NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
 
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
 
     stages {
-   stage('Clone Repository') {
-       steps {
-           script {
-               echo 'Cloning repository...'
-               sh '''
-                   if [ -d "DevopsSkiStation" ]; then
-                       echo "Removing existing DevopsSkiStation directory..."
-                       rm -rf DevopsSkiStation
-                   fi
-                   git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git
-               '''
-           }
-       }
-   }
-
+        stage('Clone Repository') {
+            steps {
+                script {
+                    echo 'Cloning repository...'
+                    sh '''
+                        if [ -d "DevopsSkiStation" ]; then
+                            echo "Removing existing DevopsSkiStation directory..."
+                            rm -rf DevopsSkiStation
+                        fi
+                        git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git
+                    '''
+                }
+            }
+        }
 
         stage('Update Version in POM') {
             steps {
@@ -99,6 +98,7 @@ pipeline {
                     if (sh(script: 'test -f docker-compose.yml', returnStatus: true) != 0) {
                         error 'docker-compose.yml not found!'
                     }
+
                     echo 'Checking Docker image...'
                     sh "docker images | grep ${IMAGE_NAME}"
 
@@ -112,8 +112,8 @@ pipeline {
                     '''
 
                     echo 'Starting Docker Compose...'
-                    sh "docker-compose up -d --build"
-                    sh 'docker-compose ps'
+                    sh "docker compose up -d --build"
+                    sh 'docker compose ps'
                     def endTime = System.currentTimeMillis()
                     echo "Docker Compose duration: ${(endTime - startTime) / 1000}s"
                 }
