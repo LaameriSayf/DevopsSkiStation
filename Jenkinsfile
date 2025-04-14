@@ -7,7 +7,7 @@ pipeline {
     IMAGE_TAG = 'latest'
     GITHUB = credentials('github-creds')
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
-    NEXUS_CREDENTIAL_ID = 'nexus-snapshots'
+    NEXUS_CREDENTIAL_ID = 'nexus'
      }
 
     stages {

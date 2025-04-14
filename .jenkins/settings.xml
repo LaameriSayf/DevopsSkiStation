@@ -6,7 +6,7 @@
     <servers>
         <!-- Nexus authentication -->
         <server>
-            <id>nexus-snapshots</id>
+            <id>nexus</id>
             <username>admin</username>
             <password>adminadmin</password>
         </server>
