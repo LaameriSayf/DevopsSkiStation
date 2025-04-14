@@ -6,7 +6,9 @@ pipeline {
     IMAGE_NAME = 'station-ski'
     IMAGE_TAG = 'latest'
     GITHUB = credentials('github-creds')
-    }
+    NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
+    NEXUS_CREDENTIAL_ID = 'github-creds'
+     }
 
     stages {
         stage('Git') {
@@ -45,10 +47,10 @@ pipeline {
 
         stage('Nexus') {
             steps {
-                    sh """
-                     echo " Debug: Username=${GITHUB_USR}"
-                        mvn deploy -DskipTests -DaltDeploymentRepository=github::default::https://${GITHUB_USR}:${GITHUB_PSW}@maven.pkg.github.com/LaameriSayf/DevopsSkiStation
-                    """
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    echo 'Deploying to Nexus...'
+                    sh "mvn deploy -DaltDeploymentRepository=nexus::default::${NEXUS_REPO_URL} -s .jenkins/settings.xml -e"
+                }
             }
         }
 
