@@ -19,7 +19,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 sh 'rm -rf DevOpCheck'
-                sh 'git clone --branch Mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git'
+                sh 'git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git'
             }
         }
 
