@@ -1,6 +1,42 @@
+<<<<<<< Updated upstream
 version: '3.8'
 
 services:
+=======
+version: "3.8"  # Recommended version for compatibility
+
+services:
+  mysqldb:
+    image: mysql:5.7
+    container_name: mysqldb
+    environment:
+      - MYSQL_ROOT_PASSWORD=""  # Empty password for root user
+      - MYSQL_DATABASE=stationSki
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes  # Allow empty password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - devops_network
+
+  gestionski:
+    image: 192.168.33.10:8082/mahmoudabdulkareem1/gestion-stationski:latest
+
+    container_name: gestionski
+    ports:
+      - "8089:8089"
+    restart: unless-stopped
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      - mysqldb
+    networks:
+      - devops_network
+
+
+>>>>>>> Stashed changes
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -9,6 +45,10 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
+<<<<<<< Updated upstream
+=======
+    restart: unless-stopped
+>>>>>>> Stashed changes
     networks:
       - devops_network
 
@@ -16,11 +56,19 @@ services:
     image: sonatype/nexus3
     container_name: nexus
     ports:
+<<<<<<< Updated upstream
       - "8081:8081"
+=======
+      - "8084:8081"
+>>>>>>> Stashed changes
     environment:
       - NEXUS_CONTEXT_PATH=/nexus
     volumes:
       - nexus_data:/nexus-data
+<<<<<<< Updated upstream
+=======
+    restart: unless-stopped
+>>>>>>> Stashed changes
     networks:
       - devops_network
 
@@ -29,12 +77,20 @@ services:
     container_name: sonarqube
     ports:
       - "9000:9000"
+<<<<<<< Updated upstream
+=======
+    restart: unless-stopped
+>>>>>>> Stashed changes
     networks:
       - devops_network
 
 volumes:
   jenkins_home:
   nexus_data:
+<<<<<<< Updated upstream
+=======
+  mysql_data:  # Ensure persistence for MySQL data
+>>>>>>> Stashed changes
 
 networks:
   devops_network:

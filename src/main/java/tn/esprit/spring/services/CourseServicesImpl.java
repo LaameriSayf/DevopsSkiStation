@@ -2,6 +2,10 @@ package tn.esprit.spring.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
+<<<<<<< Updated upstream
+=======
+import org.springframework.dao.EmptyResultDataAccessException;
+>>>>>>> Stashed changes
 import org.springframework.stereotype.Service;
 import tn.esprit.spring.entities.Course;
 import tn.esprit.spring.entities.TypeCourse;
@@ -33,7 +37,8 @@ public class CourseServicesImpl implements ICourseServices {
 
     @Override
     public Course retrieveCourse(Long numCourse) {
-        return courseRepository.findById(numCourse).orElse(null);
+        return courseRepository.findById(numCourse)
+                .orElseThrow(() -> new EmptyResultDataAccessException("Course not found", 1)); // This should throw the exception
     }
 
     public List<Course> filterCoursesByLevel(int level) {
