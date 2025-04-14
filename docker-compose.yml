@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-version: '3.8'
-
-services:
-=======
 version: "3.8"  # Recommended version for compatibility
 
 services:
@@ -36,7 +31,6 @@ services:
       - devops_network
 
 
->>>>>>> Stashed changes
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -45,10 +39,7 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-<<<<<<< Updated upstream
-=======
     restart: unless-stopped
->>>>>>> Stashed changes
     networks:
       - devops_network
 
@@ -56,19 +47,12 @@ services:
     image: sonatype/nexus3
     container_name: nexus
     ports:
-<<<<<<< Updated upstream
-      - "8081:8081"
-=======
       - "8084:8081"
->>>>>>> Stashed changes
     environment:
       - NEXUS_CONTEXT_PATH=/nexus
     volumes:
       - nexus_data:/nexus-data
-<<<<<<< Updated upstream
-=======
     restart: unless-stopped
->>>>>>> Stashed changes
     networks:
       - devops_network
 
@@ -77,20 +61,14 @@ services:
     container_name: sonarqube
     ports:
       - "9000:9000"
-<<<<<<< Updated upstream
-=======
     restart: unless-stopped
->>>>>>> Stashed changes
     networks:
       - devops_network
 
 volumes:
   jenkins_home:
   nexus_data:
-<<<<<<< Updated upstream
-=======
   mysql_data:  # Ensure persistence for MySQL data
->>>>>>> Stashed changes
 
 networks:
   devops_network:

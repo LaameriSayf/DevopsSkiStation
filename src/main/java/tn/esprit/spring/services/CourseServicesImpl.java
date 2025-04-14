@@ -2,10 +2,7 @@ package tn.esprit.spring.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
-<<<<<<< Updated upstream
-=======
 import org.springframework.dao.EmptyResultDataAccessException;
->>>>>>> Stashed changes
 import org.springframework.stereotype.Service;
 import tn.esprit.spring.entities.Course;
 import tn.esprit.spring.entities.TypeCourse;
