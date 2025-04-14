@@ -16,14 +16,21 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                script {
-                    echo 'Cloning repository...'
-                    sh 'git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git'
-                }
-            }
-        }
+   stage('Clone Repository') {
+       steps {
+           script {
+               echo 'Cloning repository...'
+               sh '''
+                   if [ -d "DevopsSkiStation" ]; then
+                       echo "Removing existing DevopsSkiStation directory..."
+                       rm -rf DevopsSkiStation
+                   fi
+                   git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git
+               '''
+           }
+       }
+   }
+
 
         stage('Update Version in POM') {
             steps {
