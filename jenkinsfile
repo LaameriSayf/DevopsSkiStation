@@ -46,8 +46,6 @@ pipeline {
             }
         }
 
-
-
         stage('Build') {
             steps {
                 script {
@@ -116,8 +114,7 @@ pipeline {
             }
         }
 
-
-  stage('Docker Build') {
+        stage('Docker Build') {
             steps {
                 script {
                     echo '🐳 Building Docker Image...'
@@ -148,15 +145,44 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy with Docker Compose') {
-                    steps {
-                        script {
-                            echo '🚀 Deploying with Docker Compose...'
-                            sh 'docker compose up -d'
-                        }
-                    }
+            steps {
+                script {
+                    echo '🚀 Deploying with Docker Compose...'
+                    sh 'docker compose up -d'
                 }
+            }
+        }
+    }
 
+    post {
+        success {
+            emailext (
+                subject: "✅ Succès du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                <p>Le pipeline s'est terminé avec succès 🎉</p>
+                <p><b>Job:</b> ${env.JOB_NAME}<br>
+                <b>Build:</b> #${env.BUILD_NUMBER}<br>
+                <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                """,
+                mimeType: 'text/html',
+                to: 'trabelsihalim4@gmail.com'
+            )
+        }
 
+        failure {
+            emailext (
+                subject: "❌ Échec du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                <p>Le pipeline a échoué 🚨</p>
+                <p><b>Job:</b> ${env.JOB_NAME}<br>
+                <b>Build:</b> #${env.BUILD_NUMBER}<br>
+                <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                """,
+                mimeType: 'text/html',
+                to: 'trabelsihalim4@gmail.com'
+            )
+        }
     }
 }
