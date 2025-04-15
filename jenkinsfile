@@ -167,7 +167,7 @@ pipeline {
                 <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 mimeType: 'text/html',
-                to: 'trabelsihalim4@gmail.com'
+                to: 'halimtrabelsi73@gmail.com'
             )
         }
 
@@ -181,7 +181,7 @@ pipeline {
                 <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 mimeType: 'text/html',
-                to: 'trabelsihalim4@gmail.com'
+                to: 'halimtrabelsi73@gmail.com'
             )
         }
     }
