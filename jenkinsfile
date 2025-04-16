@@ -162,9 +162,6 @@ pipeline {
                 subject: "✅ Succès du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
                 <p>Le pipeline s'est terminé avec succès 🎉</p>
-                <p><b>Job:</b> ${env.JOB_NAME}<br>
-                <b>Build:</b> #${env.BUILD_NUMBER}<br>
-                <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
@@ -176,9 +173,6 @@ pipeline {
                 subject: "❌ Échec du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
                 <p>Le pipeline a échoué 🚨</p>
-                <p><b>Job:</b> ${env.JOB_NAME}<br>
-                <b>Build:</b> #${env.BUILD_NUMBER}<br>
-                <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
