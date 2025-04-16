@@ -68,7 +68,7 @@ pipeline {
             }
         }
 
-        stage('Start MongoDB') {
+        stage('Start MYSQL') {
             steps {
                 script {
                     def pipelineReport = readJSON file: env.pipelineReportFile
