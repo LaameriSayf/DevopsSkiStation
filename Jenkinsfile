@@ -53,7 +53,7 @@ pipeline {
        stage('Generate SonarQube PDF') {
            steps {
                script {
-                   def reportUrl = "http://192.168.56.10:9000/project/overview?id=DevopsSkiStation"
+                   def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
                    // Attendre plus longtemps pour que la page se charge
                    sh "sleep 60" // Attendre 30 secondes, ajustez si nécessaire
                    sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
