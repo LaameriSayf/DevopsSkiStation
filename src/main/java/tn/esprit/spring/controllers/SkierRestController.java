@@ -30,7 +30,7 @@ public class SkierRestController {
                                            @PathVariable("numCourse") Long numCourse){
         return  skierServices.addSkierAndAssignToCourse(skier,numCourse);
     }
-   
+
 
     @Operation(description = "Assign Skier To Piste")
     @PutMapping("/assignToPiste/{numSkier}/{numPiste}")
