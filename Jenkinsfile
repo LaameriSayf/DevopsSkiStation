@@ -78,10 +78,7 @@ pipeline {
     }
 
     post {
-        always {
-            echo "🧹 Nettoyage Docker"
-            sh 'docker-compose down'
-        }
+
 
         success {
             echo '✅ Pipeline exécuté avec succès.'
