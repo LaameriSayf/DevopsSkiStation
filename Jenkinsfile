@@ -52,7 +52,7 @@ pipeline {
                 steps {
                     script {
                         echo "Building Docker Image..."
-                        sh "sudo docker build -t eyachamekh-g5-stationski:latest ."
+                        sh "docker build -t eyachamekh-g5-stationski:latest ."
                     }
                 }
             }
