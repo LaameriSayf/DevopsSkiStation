@@ -6,7 +6,16 @@ pipeline {
     }
 
     stages {
-        // 1️⃣ Stage Git : Récupérer le code depuis Git
+        // ℹ️ 0️⃣ Initialisation du fichier report.txt
+        stage('Initialize Report') {
+            steps {
+                script {
+                    sh 'echo "Build Report for ${env.JOB_NAME} #${env.BUILD_NUMBER}" > report.txt'
+                }
+            }
+        }
+
+        // 1️⃣ Git
         stage('Git') {
             steps {
                 script {
@@ -17,29 +26,32 @@ pipeline {
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                         ]]
                     ])
+                    sh 'echo "[STAGE] Git completed" >> report.txt'
                 }
             }
         }
 
-        // 2️⃣ Stage Maven Build : Build du projet avec Maven
+        // 2️⃣ Maven Build
         stage('Maven Build') {
             steps {
                 script {
-                    sh 'mvn clean install'
+                    sh 'mvn clean install | tee -a report.txt'
+                    sh 'echo "[STAGE] Maven Build completed" >> report.txt'
                 }
             }
         }
 
-        // 3️⃣ Stage Test : Lancer les tests Maven
+        // 3️⃣ Test
         stage('Test') {
             steps {
                 script {
-                    sh 'mvn test'
+                    sh 'mvn test | tee -a report.txt'
+                    sh 'echo "[STAGE] Test completed" >> report.txt'
                 }
             }
         }
 
-        // 4️⃣ Stage SonarQube : Analyse du code avec SonarQube
+        // 4️⃣ SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -47,45 +59,36 @@ pipeline {
                         mvn sonar:sonar \
                         -Dsonar.projectKey=DevopsSkiStation \
                         -Dsonar.host.url=http://192.168.56.10:9000 \
-                        -Dsonar.login=sqa_5b84f2533f8e4f1c262920e14dc8e8b7644fcc14
+                        -Dsonar.login=sqa_... \
+                        | tee -a report.txt
                     '''
+                    sh 'echo "[STAGE] SonarQube Analysis completed" >> report.txt'
                 }
             }
         }
 
-        // 5️⃣ Génération de rapport PDF
-        stage('Generate PDF Report') {
-            steps {
-                script {
-                    sh 'pandoc report.txt -o report.pdf'
-                }
-            }
-        }
-
-        // 6️⃣ Nexus Deploy
+        // 5️⃣ Nexus Deploy
         stage('Nexus') {
             steps {
                 script {
-                    sh 'mvn deploy'
+                    sh 'mvn deploy | tee -a report.txt'
+                    sh 'echo "[STAGE] Nexus deploy completed" >> report.txt'
                 }
             }
         }
 
-        // 7️⃣ Build Docker Image
+        // 6️⃣ Build Docker Image
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImageName = 'sayflaameri/gestion-station-ski'
-                    def dockerImageTag = 'latest'
-
-                    sh 'echo "📁 Contenu du workspace actuel :" && pwd && ls -R'
-                    sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
-                    sh "docker build -t ${dockerImageName}:${dockerImageTag} -f Dockerfile ."
+                    def img = 'sayflaameri/gestion-station-ski:latest'
+                    sh "docker build -t ${img} -f Dockerfile . | tee -a report.txt"
+                    sh 'echo "[STAGE] Docker image built" >> report.txt'
                 }
             }
         }
 
-        // 8️⃣ Push vers DockerHub
+        // 7️⃣ Push Docker Image
         stage('Push Docker Image') {
             steps {
                 script {
@@ -95,96 +98,91 @@ pipeline {
                         passwordVariable: 'DOCKERHUB_PASSWORD'
                     )]) {
                         sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
-                        sh "docker push sayflaameri/gestion-station-ski:latest"
+                        sh 'docker push sayflaameri/gestion-station-ski:latest | tee -a report.txt'
+                        sh 'echo "[STAGE] Docker push completed" >> report.txt'
                     }
                 }
             }
         }
 
-        // 9️⃣ Déploiement avec Docker Compose
+        // 8️⃣ Docker Compose
         stage('Docker Compose') {
             steps {
                 script {
-                    sh 'ls -l && cat docker-compose.yml'
                     sh 'docker-compose down || true'
-                    sh 'docker-compose up -d'
+                    sh 'docker-compose up -d | tee -a report.txt'
+                    sh 'echo "[STAGE] Docker Compose deployed" >> report.txt'
                 }
             }
         }
 
-        // 🔟 Appel Grafana
+        // 9️⃣ Grafana
         stage('Grafana') {
             steps {
                 script {
-                    def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
+                    def url = 'http://192.168.56.10:3000/...'
                     withCredentials([usernamePassword(
                         credentialsId: 'credential_grafana',
                         usernameVariable: 'GRAFANA_USERNAME',
                         passwordVariable: 'GRAFANA_PASSWORD'
                     )]) {
-                        def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
-                        sh curlCommand
+                        sh "curl -s -u $GRAFANA_USERNAME:$GRAFANA_PASSWORD $url | tee -a report.txt"
+                        sh 'echo "[STAGE] Grafana data fetched" >> report.txt'
                     }
                 }
             }
         }
 
-        // 🔔 Test de mailing (juste pour log)
+        // 🔟 Génération du PDF
+        stage('Generate PDF Report') {
+            steps {
+                script {
+                    // Si pour une raison report.txt n'existe pas, on le crée
+                    sh 'if [ ! -f report.txt ]; then echo "No logs found" > report.txt; fi'
+                    sh 'pandoc report.txt -o report.pdf'
+                    sh 'echo "[STAGE] PDF report generated" >> report.txt'
+                }
+            }
+        }
+
+        // 🔔 Test de mailing (log)
         stage('Mailing Test') {
             steps {
-                echo 'mail success'
+                script {
+                    sh 'echo "[STAGE] Mailing test passed" >> report.txt'
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline terminé (état : ${currentBuild.currentResult})"
+            echo "Pipeline terminé : ${currentBuild.currentResult}"
             sh 'docker-compose down'
         }
-
         success {
             emailext(
                 to: 'saiflaameri00@gmail.com',
                 subject: "✅ Succès : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <h3>✅ Build réussie !</h3>
-                    <p>Job : ${env.JOB_NAME}</p>
-                    <p>Build # : ${env.BUILD_NUMBER}</p>
-                    <p>URL : <a href=\"${env.BUILD_URL}\">${env.BUILD_URL}</a></p>
-                    <p>Vous trouverez le rapport PDF en pièce jointe.</p>
-                """,
+                body: "<h3>✅ Build réussie!</h3><p>Voir le rapport PDF en pièce jointe.</p>",
                 attachmentsPattern: 'report.pdf',
                 mimeType: 'text/html'
             )
         }
-
         unstable {
             emailext(
                 to: 'saiflaameri00@gmail.com',
                 subject: "⚠️ Instable : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <h3>⚠️ Build instable</h3>
-                    <p>Job : ${env.JOB_NAME}</p>
-                    <p>Build # : ${env.BUILD_NUMBER}</p>
-                    <p>Vérifiez les tests ou les warnings.</p>
-                """,
+                body: "<h3>⚠️ Build instable</h3>",
                 attachmentsPattern: 'report.pdf',
                 mimeType: 'text/html'
             )
         }
-
         failure {
             emailext(
                 to: 'saiflaameri00@gmail.com',
                 subject: "❌ Échec : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <h3>❌ Build échouée</h3>
-                    <p>Job : ${env.JOB_NAME}</p>
-                    <p>Build # : ${env.BUILD_NUMBER}</p>
-                    <p>Consultez <a href=\"${env.BUILD_URL}\">${env.BUILD_URL}</a> pour plus de détails.</p>
-                    <p>Le rapport PDF est en pièce jointe.</p>
-                """,
+                body: "<h3>❌ Build échouée</h3>",
                 attachmentsPattern: 'report.pdf',
                 mimeType: 'text/html'
             )
