@@ -99,7 +99,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment Successful!"
+            echo "✅ Deployzment Successful!"
         }
         failure {
             echo "❌ Deployment Failed! Check logs."
