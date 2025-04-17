@@ -123,7 +123,7 @@ pipeline {
                                    steps {
                                        script {
                                            emailext(
-                                               to: 'saiflaameri00@gmail.com',
+                                               to: 'eya.bouthouri@esprit.tn',
                                                subject: "✅ Test email Jenkins",
                                                body: """Hello,
 
