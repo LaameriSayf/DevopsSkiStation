@@ -47,7 +47,7 @@ pipeline {
             }
         }
 
-          
+
 
         stage('Deploy to Nexus') {
             steps {
