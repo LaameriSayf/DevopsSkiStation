@@ -6,6 +6,7 @@ pipeline {
     IMAGE_NAME = 'eyachamekh-g5-stationski'
     IMAGE_TAG = 'latest'
     DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
+    DOCKER_USERNAME = 'eyachamekh'
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
     NEXUS_CREDENTIAL_ID = 'nexus'
      }
@@ -57,7 +58,7 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
