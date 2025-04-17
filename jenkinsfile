@@ -130,6 +130,23 @@ pipeline {
             }
         }
 
+        stage('Trivy Scan - DockerHub Image') {
+            steps {
+                script {
+                    def imageName = "halimtrabelsi/gestionstationski-app:0.0.1"
+                    echo "🔍 Scanning Docker Hub image with Trivy: ${imageName}"
+
+                    // Run Trivy without stopping the pipeline
+                    sh """
+                        trivy image --severity CRITICAL --exit-code 0 --no-progress ${imageName} > trivy-report.txt || true
+                    ""
+
+                    // Print scan results to Jenkins console
+                    sh "cat trivy-report.txt"
+                }
+            }
+        }
+
         stage('Deploy with Docker Compose') {
             steps {
                 echo '🚀 Deploying with Docker Compose...'
@@ -139,6 +156,11 @@ pipeline {
     }
 
     post {
+        always {
+            // Archive Trivy scan report regardless of result
+            archiveArtifacts artifacts: 'trivy-report.txt', onlyIfSuccessful: false
+        }
+
         success {
             emailext (
                 subject: "✅ Succès du Pipeline: ",
@@ -147,6 +169,7 @@ pipeline {
                 to: 'halimtrabelsi73@gmail.com'
             )
         }
+
         failure {
             emailext (
                 subject: "❌ Échec du Pipeline: ",
