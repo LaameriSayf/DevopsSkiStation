@@ -18,4 +18,5 @@ WORKDIR /app
 
 ADD target/ouday_oueslati-0.1.8.jar oudayserv.jar
 
-ENTRYPOINT ["java", "-jar", "oudayserv.jar"]
+# 👇 FIX: Add JVM option to allow reflective access
+ENTRYPOINT ["java", "--add-opens", "java.base/java.io=ALL-UNNAMED", "-jar", "oudayserv.jar"]
