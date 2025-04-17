@@ -119,6 +119,11 @@ pipeline {
                             }
                          }
                          }
+                         stage('Mailing') {
+                                                  steps {
+                                                      echo "mail success"
+                                                  }
+                                              }
 
 
       }
