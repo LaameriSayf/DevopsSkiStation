@@ -141,7 +141,7 @@ pipeline {
     post {
         success {
             emailext (
-                subject: "✅ Succès du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "✅ Succès du Pipeline: ",
                 body: "<p>Le pipeline s'est terminé avec succès 🎉</p>",
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
@@ -149,7 +149,7 @@ pipeline {
         }
         failure {
             emailext (
-                subject: "❌ Échec du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "❌ Échec du Pipeline: ",
                 body: "<p>Le pipeline a échoué 🚨</p>",
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
