@@ -149,6 +149,7 @@ pipeline {
                                                mail to: 'saiflaameri00@gmail.com',
                                                          subject: "Succès du Pipeline",
                                                          body: "Le pipeline a été exécuté avec succès."
+                                                attachmentsPattern: 'report.pdf'
 
                                           }
                                           failure {
@@ -156,6 +157,7 @@ pipeline {
                                               mail to: 'saiflaameri00@gmail.com',
                                                subject: "Échec du Pipeline",
                                                          body: "Il y a eu un problème avec l'exécution du pipeline."
+                                                       attachmentsPattern: 'report.pdf'
 
 
                                           }
