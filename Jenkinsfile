@@ -49,31 +49,37 @@ pipeline {
             }
         }
 
-       stage('Generate SonarQube PDF') {
-           steps {
-               script {
-                   def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
+        // 5️⃣ Générer le rapport PDF depuis SonarQube avec Puppeteer
+        stage('Generate SonarQube PDF') {
+            steps {
+                script {
+                    def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
+                    def isInstalled = sh(script: "which node", returnStatus: true) == 0 && sh(script: "which npm", returnStatus: true) == 0
 
-                   // 🔍 Vérifier si wkhtmltopdf est installé
-                   def isInstalled = sh(script: "which wkhtmltopdf", returnStatus: true) == 0
+                    if (isInstalled) {
+                        echo "✅ Node.js et Puppeteer sont installés, génération du PDF en cours..."
 
-                   if (isInstalled) {
-                       echo "✅ wkhtmltopdf est installé, génération du PDF en cours..."
+                        // ⏳ Attendre que la page soit bien accessible
+                        sh "sleep 30"
 
-                       // ⏳ Attendre que la page soit bien accessible
-                       sh "sleep 30"
-
-                       // 📄 Générer le rapport PDF
-                       sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
-                       echo "📄 Rapport généré : sonar-report.pdf"
-
-                   } else {
-                       echo "❌ wkhtmltopdf n'est pas installé. Veuillez l'installer avec : sudo apt install wkhtmltopdf"
-                   }
-               }
-           }
-       }
-
+                        // 📄 Générer le rapport PDF avec Puppeteer
+                        sh '''
+                            echo "const puppeteer = require('puppeteer');" > generate-pdf.js
+                            echo "puppeteer.launch().then(async browser => {" >> generate-pdf.js
+                            echo "  const page = await browser.newPage();" >> generate-pdf.js
+                            echo "  await page.goto('${reportUrl}', {waitUntil: 'networkidle0'});" >> generate-pdf.js
+                            echo "  await page.pdf({ path: 'sonar-report.pdf', format: 'A4' });" >> generate-pdf.js
+                            echo "  await browser.close();" >> generate-pdf.js
+                            echo "});" >> generate-pdf.js
+                            node generate-pdf.js
+                        '''
+                        echo "📄 Rapport généré : sonar-report.pdf"
+                    } else {
+                        echo "❌ Node.js ou Puppeteer ne sont pas installés. Assurez-vous que Node.js et Puppeteer sont installés."
+                    }
+                }
+            }
+        }
 
         // 6️⃣ Déploiement vers Nexus
         stage('Nexus') {
