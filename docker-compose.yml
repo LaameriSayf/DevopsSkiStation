@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   gestionski:
-    image: eyachamekh-g5-stationski
+    image: eyachamekh/eyachamekh-g5-stationski
 
     container_name: gestionski
     ports:
