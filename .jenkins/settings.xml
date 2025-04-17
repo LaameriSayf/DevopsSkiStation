@@ -8,8 +8,6 @@
             <id>nexus</id>
             <username>devopsint</username>
             <password>Blackcat12</password>
-
-
         </server>
     </servers>
 

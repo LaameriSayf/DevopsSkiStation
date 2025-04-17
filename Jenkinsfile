@@ -90,8 +90,8 @@ pipeline {
         }
 
          stage('Deploy with Docker Compose') {
-                    steps {
-                        echo '🚀 Deploying with Docker Compose...'
+            steps {
+                echo '🚀 Deploying with Docker Compose...'
                         sh 'docker compose up -d'
                     }
                 }
