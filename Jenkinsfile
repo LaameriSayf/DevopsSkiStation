@@ -50,44 +50,16 @@ pipeline {
         }
 
         // 5️⃣ Générer le rapport PDF depuis Sonar (option simple via wkhtmltopdf)
-      stage('Generate SonarQube PDF') {
-          steps {
-              script {
-                  // 1. Récupérer les données via l'API SonarQube (format JSON)
-                  def sonarData = sh(
-                      script: """
-                          curl -s -u admin:admin \
-                          "${SONARQUBE_URL}/api/measures/component?component=${SONARQUBE_PROJECT}&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density" \
-                          | jq -r '.component.measures[] | [.metric,.value] | @tsv'
-                      """,
-                      returnStdout: true
-                  ).trim()
-
-                  // 2. Générer un rapport HTML simple
-                  def htmlReport = """
-                      <html>
-                      <head><title>SonarQube Report</title></head>
-                      <body>
-                          <h1>Rapport SonarQube - ${SONARQUBE_PROJECT}</h1>
-                          <p>Date: ${new Date()}</p>
-                          <table border="1">
-                              <tr><th>Métrique</th><th>Valeur</th></tr>
-                              ${sonarData.split('\n').collect { line ->
-                                  def parts = line.split('\t')
-                                  "<tr><td>${parts[0]}</td><td>${parts[1]}</td></tr>"
-                              }.join('\n')}
-                          </table>
-                          <p>Lien complet: <a href="${SONARQUBE_URL}/dashboard?id=${SONARQUBE_PROJECT}">Dashboard SonarQube</a></p>
-                      </body>
-                      </html>
-                  """
-
-                  // 3. Convertir en PDF avec wkhtmltopdf
-                  writeFile file: 'sonar-report.html', text: htmlReport
-                  sh 'wkhtmltopdf --quiet sonar-report.html sonar-report.pdf'
-              }
-          }
-      }
+       stage('Generate SonarQube PDF') {
+           steps {
+               script {
+                   def reportUrl = "http://192.168.56.10:9000/project/overview?id=DevopsSkiStation"
+                   // Attendre plus longtemps pour que la page se charge
+                   sh "sleep 30" // Attendre 30 secondes, ajustez si nécessaire
+                   sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
+               }
+           }
+       }
 
         // 6️⃣ Déploiement vers Nexus
         stage('Nexus') {
