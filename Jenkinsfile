@@ -52,14 +52,15 @@ pipeline {
                 }
             }
         }
-stage('Generate PDF Report') {
-    steps {
-        script {
-            // Installer pandoc si besoin (ou dans l'image Jenkins Docker si t'en utilises une)
-            sh 'pandoc report.txt -o report.pdf'
+        stage('Generate PDF Report') {
+            steps {
+                script {
+                    // Installer pandoc si besoin (ou dans l'image Jenkins Docker si t'en utilises une)
+                    sh 'pandoc report.txt -o report.pdf'
+                }
+            }
         }
-    }
-}
+
 
      stage('Nexus') {
                 steps {
@@ -137,23 +138,26 @@ stage('Generate PDF Report') {
 
 
 
-                                  post {
-                                      success {
-                                          mail to: 'saiflaameri00@gmail.com',
-                                               subject: "✅ Succès du Pipeline - Rapport PDF",
-                                               body: "Le pipeline a été exécuté avec succès. Rapport ci-joint.",
-                                               attachmentsPattern: 'report.pdf'
+                                      post {
+                                          always {
+                                              script {
+                                                  sh 'docker-compose down'
+                                              }
+                                          }
+                                          success {
+                                              echo 'The process completed successfully.'
+                                               mail to: 'saiflaameri00@gmail.com',
+                                                         subject: "Succès du Pipeline",
+                                                         body: "Le pipeline a été exécuté avec succès."
+
+                                          }
+                                          failure {
+                                              echo 'The process failed.'
+                                              mail to: 'saiflaameri00@gmail.com',
+                                               subject: "Échec du Pipeline",
+                                                         body: "Il y a eu un problème avec l'exécution du pipeline."
+
+
+                                          }
                                       }
-                                      failure {
-                                          mail to: 'saiflaameri00@gmail.com',
-                                               subject: "❌ Échec du Pipeline - Rapport PDF",
-                                               body: "Le pipeline a échoué. Veuillez trouver le rapport ci-joint.",
-                                               attachmentsPattern: 'report.pdf'
-                                      }
-
-
-
-                                      }
-                                  }
-
                                   }
