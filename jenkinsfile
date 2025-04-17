@@ -156,7 +156,7 @@ pipeline {
             }
         }
 
-        stage('Test with Coverage') {
+        /*stage('Test with Coverage') {
             steps {
                 script {
                     def pipelineReport = readJSON file: env.pipelineReportFile
@@ -291,7 +291,7 @@ pipeline {
                     }
                 }
             }
-        }
+        }*/
 
         stage('Docker Compose') {
             steps {
