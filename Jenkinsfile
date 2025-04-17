@@ -12,7 +12,7 @@ pipeline {
         NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
 
         NEXUS_CREDENTIAL_ID = 'docker-nexus-creds'  // Updated to use your Nexus credential ID
-        DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
+        DOCKERHUB_CREDENTIALS = credentials('docker-nexus-creds'')
     }
 
     stages {
@@ -78,7 +78,7 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     echo 'Logging into Docker Hub...'
-                    withCredentials([usernamePassword(credentialsId: 'Docker_ID', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker-nexus-creds'', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
                         sh '''
                         echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
                         echo "Pushing image to Docker Hub..."
