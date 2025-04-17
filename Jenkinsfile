@@ -137,29 +137,59 @@ pipeline {
                                              }
 
 
+post {
+    always {
+        echo "Pipeline terminé (état : ${currentBuild.currentResult})"
+        sh 'docker-compose down'
+    }
 
-                                      post {
-                                          always {
-                                              script {
-                                                  sh 'docker-compose down'
-                                              }
-                                          }
-                                          success {
-                                              echo 'The process completed successfully.'
-                                               mail to: 'saiflaameri00@gmail.com',
-                                                         subject: "Succès du Pipeline",
-                                                         body: "Le pipeline a été exécuté avec succès."
-                                                attachmentsPattern: 'report.pdf'
+    success {
+        emailext(
+            to: 'saiflaameri00@gmail.com',
+            subject: "✅ Succès : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <h3>✅ Build réussie !</h3>
+                <p>Job : ${env.JOB_NAME}</p>
+                <p>Build # : ${env.BUILD_NUMBER}</p>
+                <p>URL : <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                <p>Vous trouverez le rapport PDF en pièce jointe.</p>
+            """,
+            attachmentsPattern: 'report.pdf',
+            mimeType: 'text/html'
+        )
+    }
 
-                                          }
-                                          failure {
-                                              echo 'The process failed.'
-                                              mail to: 'saiflaameri00@gmail.com',
-                                               subject: "Échec du Pipeline",
-                                                         body: "Il y a eu un problème avec l'exécution du pipeline."
-                                                       attachmentsPattern: 'report.pdf'
+    unstable {
+        emailext(
+            to: 'saiflaameri00@gmail.com',
+            subject: "⚠️ Instable : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <h3>⚠️ Build instable</h3>
+                <p>Job : ${env.JOB_NAME}</p>
+                <p>Build # : ${env.BUILD_NUMBER}</p>
+                <p>Vérifiez les tests ou les warnings.</p>
+            """,
+            attachmentsPattern: 'report.pdf',
+            mimeType: 'text/html'
+        )
+    }
 
+    failure {
+        emailext(
+            to: 'saiflaameri00@gmail.com',
+            subject: "❌ Échec : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <h3>❌ Build échouée</h3>
+                <p>Job : ${env.JOB_NAME}</p>
+                <p>Build # : ${env.BUILD_NUMBER}</p>
+                <p>Consultez <a href="${env.BUILD_URL}">${env.BUILD_URL}</a> pour plus de détails.</p>
+                <p>Le rapport PDF est en pièce jointe.</p>
+            """,
+            attachmentsPattern: 'report.pdf',
+            mimeType: 'text/html'
+        )
+    }
+}
 
-                                          }
                                       }
                                   }
