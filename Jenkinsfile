@@ -7,7 +7,11 @@ pipeline {
     IMAGE_TAG = 'latest'
     DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
     DOCKER_USERNAME = 'eyachamekh'
-    NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
+    NEXUS_HOST = '192.168.33.10'
+    NEXUS_PORT = '8081'
+    NEXUS_PROTOCOL = 'http'
+    NEXUS_REPO_NAME = 'maven-releases' // or maven-snapshots if you're pushing a snapshot
+    NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO_NAME}/"
     NEXUS_CREDENTIAL_ID = 'nexus'
      }
 
@@ -44,7 +48,14 @@ pipeline {
             }
 
         }
-
+            stage('Nexus') {
+                steps {
+                    withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        echo 'Deploying to Nexus...'
+                        sh "mvn deploy -DaltDeploymentRepository=nexus::default::${NEXUS_REPO_URL} -s .jenkins/settings.xml -e"
+                    }
+                }
+            }
 
 
         stage('Build Docker Image') {
