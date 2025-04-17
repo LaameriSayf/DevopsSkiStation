@@ -119,12 +119,24 @@ pipeline {
                             }
                          }
                          }
-                         stage('Mailing') {
-                                                  steps {
-                                                      echo "mail success"
-                                                  }
-                                              }
+                        stage('Mailing Test') {
+                                   steps {
+                                       script {
+                                           emailext(
+                                               to: 'saiflaameri00@gmail.com',
+                                               subject: "✅ Test email Jenkins",
+                                               body: """Hello,
 
+                       Ceci est un test d'envoi de mail depuis Jenkins. 🎉
+
+                       Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+                       Lien: ${env.BUILD_URL}
+                       """,
+                                               mimeType: 'text/plain'
+                                           )
+                                       }
+                                   }
+                               }
 
       }
   }
