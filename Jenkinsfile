@@ -3,9 +3,9 @@ pipeline {
 
     environment {
     NEXUS_REPO = '192.168.33.10:8081'
-    IMAGE_NAME = 'eyachamekh-g5-stationski'
+    IMAGE_NAME = 'eyachamekh/eyachamekh-g5-stationski'
     IMAGE_TAG = 'latest'
-    GITHUB = credentials('github-creds')
+    DOCKER_HUB_CREDS = credentials('dockerhub-creds')
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
     NEXUS_CREDENTIAL_ID = 'nexus'
      }
@@ -46,30 +46,32 @@ pipeline {
 
 
 
-
-
-            stage('Build Docker Image') {
-                steps {
-                    script {
-                        echo "Building Docker Image..."
-                        sh "docker build -t eyachamekh-g5-stationski:latest ."
-                    }
-                }
-            }
-
-        stage('Push to Docker Hub') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Tagging Docker image..."
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} eyachamekh/${IMAGE_NAME}:${IMAGE_TAG}"
-
-                    echo "Pushing Docker image to Docker Hub..."
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        docker.image("eyachamekh/${IMAGE_NAME}:${IMAGE_TAG}").push()
-                    }
+                    echo "Building Docker Image..."
+                    sh 'docker build -t eyachamekh/eyachamekh-g5-stationski:latest .'
                 }
             }
         }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    echo "Pushing Docker Image to Docker Hub..."
+                    sh 'docker push eyachamekh/eyachamekh-g5-stationski:latest'
+                }
+            }
+        }
+
 
 
 
