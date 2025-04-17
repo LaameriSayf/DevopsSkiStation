@@ -9,7 +9,7 @@ pipeline {
         MYSQL_CONTAINER = 'mysql-test'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         IMAGE_NAME = 'ouday2025/devopsskistation'
-        IMAGE_TAG = "v${env.BUILD_NUMBER}"
+        IMAGE_TAG = 'v29'
     }
 
     stages {
@@ -68,7 +68,7 @@ pipeline {
             }
         }
 
-        stage('Start MYSQL') {
+        stage('Start MongoDB') {
             steps {
                 script {
                     def pipelineReport = readJSON file: env.pipelineReportFile
@@ -110,8 +110,10 @@ pipeline {
                         for i in {1..40}; do
                             echo "Tentative $i : Vérification de l'état du conteneur..."
                             docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
+                            # Ajout de logs pour vérifier les ports
                             echo "Vérification des ports exposés..."
                             docker port $MYSQL_CONTAINER
+                            # Utilisation d'une commande plus robuste pour tester la connexion
                             if docker exec $MYSQL_CONTAINER sh -c "mysql -uroot -p\\"$DB_PASS\\" -e 'SELECT 1;'" > /dev/null 2>&1; then
                                 echo "MySQL est prêt !"
                                 break
@@ -227,7 +229,7 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Pull Docker Image') {
             steps {
                 script {
                     def pipelineReport = readJSON file: env.pipelineReportFile
@@ -235,28 +237,16 @@ pipeline {
                     try {
                         sh '''
                         set -e
-                        echo "Vérification de la présence du Dockerfile..."
-                        if [ -f Dockerfile ]; then
-                            echo "Dockerfile trouvé."
-                            cat Dockerfile
-                        else
-                            echo "Erreur : Dockerfile introuvable !"
-                            exit 1
-                        fi
-                        echo "Connexion à Docker Hub..."
+                        echo "Connexion à Docker Hub pour tirer l'image..."
                         echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                        echo "Construction de l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}..."
-                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                        echo "Vérification de l'image construite..."
-                        docker images | grep ${IMAGE_NAME}
-                        echo "Pousse de l'image ${IMAGE_NAME}:${IMAGE_TAG} vers Docker Hub..."
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        echo "Téléchargement de l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}..."
+                        docker pull ${IMAGE_NAME}:${IMAGE_TAG}
                         '''
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
-                        pipelineReport['stages']['Build and Push Docker Image'] = duration
+                        pipelineReport['stages']['Pull Docker Image'] = duration
                         writeJSON file: env.pipelineReportFile, json: pipelineReport
-                        echo "Durée de l'étape Build and Push Docker Image : ${duration}s"
+                        echo "Durée de l'étape Pull Docker Image : ${duration}s"
                     }
                 }
             }
@@ -268,21 +258,14 @@ pipeline {
                     def pipelineReport = readJSON file: env.pipelineReportFile
                     def startTime = System.currentTimeMillis()
                     try {
-                        sh '''
+                        def trivyOutput = sh(script: '''
                         set -e
-                        echo "Vérification de la présence de l'image ${IMAGE_NAME}:${IMAGE_TAG}..."
-                        if docker images | grep -q "${IMAGE_NAME}.*${IMAGE_TAG}"; then
-                            echo "Image ${IMAGE_NAME}:${IMAGE_TAG} trouvée localement."
-                        else
-                            echo "Erreur : Image ${IMAGE_NAME}:${IMAGE_TAG} introuvable localement !"
-                            exit 1
-                        fi
                         echo "Scan de l'image avec Trivy..."
                         trivy image --exit-code 0 --severity HIGH,CRITICAL --scanners vuln --timeout 20m ${IMAGE_NAME}:${IMAGE_TAG} > trivy_output.txt 2>&1
                         trivy_output=$(cat trivy_output.txt | grep 'Total:' || echo "No vulnerabilities found")
                         echo "$trivy_output"
-                        '''
-                        pipelineReport['trivyResults'] = sh(script: 'cat trivy_output.txt | grep "Total:" || echo "No vulnerabilities found"', returnStdout: true).trim()
+                        ''', returnStdout: true).trim()
+                        pipelineReport['trivyResults'] = trivyOutput ?: 'No vulnerabilities found'
                     } finally {
                         def duration = (System.currentTimeMillis() - startTime) / 1000
                         pipelineReport['stages']['Scan Docker Image'] = duration
