@@ -50,43 +50,63 @@ pipeline {
         }
 
         // 5️⃣ Générer le rapport PDF depuis SonarQube avec Puppeteer
-       stage('Generate SonarQube PDF') {
-           steps {
-               script {
-                   def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
+    stage('Generate SonarQube PDF') {
+        steps {
+            script {
+                def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
 
-                   def isNodeInstalled = sh(script: "which node", returnStatus: true) == 0
-                   def isNpmInstalled = sh(script: "which npm", returnStatus: true) == 0
+                def isNodeInstalled = sh(script: "which node", returnStatus: true) == 0
+                def isNpmInstalled = sh(script: "which npm", returnStatus: true) == 0
 
-                   if (isNodeInstalled && isNpmInstalled) {
-                       echo "✅ Node.js et Puppeteer sont installés, génération du PDF en cours..."
+                if (isNodeInstalled && isNpmInstalled) {
+                    echo "✅ Node.js et Puppeteer sont installés, génération du PDF en cours..."
 
-                       sh '''
-                           sleep 30
+                    sh '''
+                        sleep 180
 
-                           if ! [ -f package.json ]; then
-                               npm init -y
-                           fi
+                        if ! [ -f package.json ]; then
+                            npm init -y
+                        fi
 
-                           npm install puppeteer
+                        npm install puppeteer
 
-                           echo "const puppeteer = require('puppeteer');" > generate-pdf.js
-                           echo "puppeteer.launch().then(async browser => {" >> generate-pdf.js
-                           echo "  const page = await browser.newPage();" >> generate-pdf.js
-                           echo "  await page.goto('${reportUrl}', {waitUntil: 'networkidle0'});" >> generate-pdf.js
-                           echo "  await page.pdf({ path: 'sonar-report.pdf', format: 'A4' });" >> generate-pdf.js
-                           echo "  await browser.close();" >> generate-pdf.js
-                           echo "});" >> generate-pdf.js
+                        cat <<EOF > generate-pdf.js
+                        const puppeteer = require('puppeteer');
 
-                           node generate-pdf.js
-                       '''
-                       echo "📄 Rapport PDF généré avec Puppeteer"
-                   } else {
-                       echo "❌ Node.js ou npm n’est pas installé. Veuillez les installer."
-                   }
-               }
-           }
-       }
+                        (async () => {
+                          const browser = await puppeteer.launch({
+                            headless: 'new',
+                            args: ['--no-sandbox', '--disable-setuid-sandbox']
+                          });
+                          const page = await browser.newPage();
+                          await page.goto('${reportUrl}', { waitUntil: 'networkidle0' });
+
+                          // Attendre que le contenu principal de SonarQube soit chargé
+                          await page.waitForSelector('#main', { timeout: 60000 });
+
+                          // Debug optionnel : capture d’écran
+                          await page.screenshot({ path: 'debug-sonar.png', fullPage: true });
+
+                          await page.pdf({
+                            path: 'sonar-report.pdf',
+                            format: 'A4',
+                            printBackground: true
+                          });
+
+                          await browser.close();
+                        })();
+                        EOF
+
+                        node generate-pdf.js
+                    '''
+
+                    echo "📄 Rapport PDF généré avec Puppeteer"
+                } else {
+                    echo "❌ Node.js ou npm n’est pas installé. Veuillez les installer."
+                }
+            }
+        }
+    }
 
         // 6️⃣ Déploiement vers Nexus
         stage('Nexus') {
