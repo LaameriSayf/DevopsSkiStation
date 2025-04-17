@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+
         IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
         IMAGE_TAG = 'latest'
 
@@ -11,7 +12,8 @@ pipeline {
         NEXUS_REPO = 'gestionski'
         NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
 
-        NEXUS_CREDENTIAL_ID = 'docker-nexus-creds'  // Using your Nexus credentials ID for Docker login
+        NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
+        DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
 
     stages {
@@ -76,14 +78,12 @@ pipeline {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
-                    echo 'Logging into Docker Hub using docker-nexus-creds...'
-                    withCredentials([usernamePassword(credentialsId: 'docker-nexus-creds', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
-                        sh '''
-                        echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
-                        echo "Pushing image to Docker Hub..."
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        '''
-                    }
+                    echo 'Logging into Docker Hub...'
+                    sh '''
+                    echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
+                    echo "Pushing image to Docker Hub..."
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    '''
                     def endTime = System.currentTimeMillis()
                     echo "Docker Hub push duration: ${(endTime - startTime) / 1000}s"
                 }
@@ -108,4 +108,26 @@ pipeline {
                     if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
                         echo "Stopping and removing mysql-test container..."
                         docker stop mysql-test || true
-                        docker
+                        docker rm mysql-test || true
+                    fi
+                    '''
+
+                    echo 'Starting Docker Compose...'
+                    sh "docker compose up -d --build"
+                    sh 'docker compose ps'
+                    def endTime = System.currentTimeMillis()
+                    echo "Docker Compose duration: ${(endTime - startTime) / 1000}s"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment Successful!"
+        }
+        failure {
+            echo "❌ Deployment Failed! Check logs."
+        }
+    }
+}
