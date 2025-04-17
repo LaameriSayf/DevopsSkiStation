@@ -47,22 +47,7 @@ pipeline {
             }
         }
 
-          stage('SonarQube Analysis') {
-            steps {
-                script {
-                    echo 'Running SonarQube analysis...'
-                    withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS}", usernameVariable: 'SONAR_USER', passwordVariable: 'SONAR_PASSWORD')]) {
-                        sh '''
-                            mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=DevopsSkiStation \
-                                -Dsonar.host.url=${SONARQUBE_URL} \
-                                -Dsonar.login=${SONAR_USER} \
-                                -Dsonar.password=${SONAR_PASSWORD}
-                        '''
-                    }
-                }
-            }
-        }
+          
 
         stage('Deploy to Nexus') {
             steps {

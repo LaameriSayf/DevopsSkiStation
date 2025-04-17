@@ -1,6 +1,7 @@
-version: "3.8"  # Recommended version for compatibility
+version: "3.8"
 
 services:
+  # MySQL Database
   mysqldb:
     image: mysql:5.7
     container_name: mysqldb
@@ -16,6 +17,7 @@ services:
     networks:
       - devops_network
 
+  # Spring Boot Application (Gestionski)
   gestionski:
     image: 192.168.33.10:8082/mahmoudabdulkareem/gestion-stationski:latest
     container_name: gestionski
@@ -29,6 +31,7 @@ services:
     networks:
       - devops_network
 
+  # Jenkins
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -41,6 +44,7 @@ services:
     networks:
       - devops_network
 
+  # Nexus
   nexus:
     image: sonatype/nexus3
     container_name: nexus
@@ -53,7 +57,7 @@ services:
     networks:
       - devops_network
 
-
+  # SonarQube
   sonarqube:
     image: sonarqube:lts
     container_name: sonarqube
@@ -63,6 +67,18 @@ services:
     networks:
       - devops_network
 
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /home/vagrant/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - gestionski
 volumes:
   jenkins_home:
   nexus_data:
