@@ -10,7 +10,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD:
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./mysql:/var/lib/mysql
     restart: unless-stopped
