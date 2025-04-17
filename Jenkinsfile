@@ -2,17 +2,17 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube'  // Nom du serveur SonarQube configuré dans Jenkins
+        SONARQUBE_SERVER = 'SonarQube'  // Nom du serveur SonarQube dans Jenkins
     }
 
     stages {
-        // 1️⃣ Stage Git : Récupérer le code depuis Git
+        // 1️⃣ Git
         stage('Git') {
             steps {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '*/Sayf']],  // Branche correcte
+                        branches: [[name: '*/Sayf']],
                         userRemoteConfigs: [[
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                         ]]
@@ -21,25 +21,21 @@ pipeline {
             }
         }
 
-        // 2️⃣ Stage Maven Build : Build du projet avec Maven
+        // 2️⃣ Build
         stage('Maven Build') {
             steps {
-                script {
-                    sh 'mvn clean install'
-                }
+                sh 'mvn clean install'
             }
         }
 
-        // 3️⃣ Stage Test : Lancer les tests Maven
+        // 3️⃣ Test
         stage('Test') {
             steps {
-                script {
-                    sh 'mvn test'
-                }
+                sh 'mvn test'
             }
         }
 
-        // 4️⃣ Stage SonarQube : Analyse du code avec SonarQube
+        // 4️⃣ SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -53,102 +49,131 @@ pipeline {
             }
         }
 
-     stage('Nexus') {
-                steps {
-                    script {
-                        sh 'mvn deploy'
-                    }
+        // 5️⃣ Générer le rapport PDF depuis Sonar (option simple via wkhtmltopdf)
+        stage('Generate SonarQube PDF') {
+            steps {
+                script {
+                    def reportUrl = "http://192.168.56.10:9000/project/overview?id=DevopsSkiStation"
+                    sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
                 }
             }
+        }
 
-   // 6️⃣ Construction de l'image Docker
+        // 6️⃣ Déploiement vers Nexus
+        stage('Nexus') {
+            steps {
+                sh 'mvn deploy'
+            }
+        }
+
+        // 7️⃣ Build Docker Image
         stage('Build Docker Image') {
             steps {
                 script {
                     def dockerImageName = 'sayflaameri/gestion-station-ski'
                     def dockerImageTag = 'latest'
 
-                    sh 'echo "📁 Contenu du workspace actuel :" && pwd && ls -R'
-
                     sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
-
-                    // Corrige ici selon l'emplacement que tu trouves :
                     sh "docker build -t ${dockerImageName}:${dockerImageTag} -f Dockerfile ."
                 }
             }
         }
 
+        // 8️⃣ Push Docker Image to Docker Hub
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_PASSWORD'
+                    )]) {
+                        sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                        sh "docker push sayflaameri/gestion-station-ski:latest"
+                    }
+                }
+            }
+        }
 
+        // 9️⃣ Docker Compose
+        stage('Docker Compose') {
+            steps {
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d'
+            }
+        }
 
+        // 🔟 Grafana Dashboards
+        stage('Grafana') {
+            steps {
+                script {
+                    def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
+                    withCredentials([usernamePassword(
+                        credentialsId: 'credential_grafana',
+                        usernameVariable: 'GRAFANA_USERNAME',
+                        passwordVariable: 'GRAFANA_PASSWORD'
+                    )]) {
+                        def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
+                        sh curlCommand
+                    }
+                }
+            }
+        }
 
-          // 7️⃣ Push vers DockerHub
-     stage('Push Docker Image') {
-         steps {
-             script {
-                 withCredentials([usernamePassword(
-                     credentialsId: 'docker-hub-credentials',
-                     usernameVariable: 'DOCKERHUB_USERNAME',
-                     passwordVariable: 'DOCKERHUB_PASSWORD'
-                 )]) {
-                     sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
-                     sh "docker push sayflaameri/gestion-station-ski:latest"
-                 }
-             }
-         }
-     }
+        // 🔔 Mailing Test (optionnel)
+        stage('Mailing Test') {
+            steps {
+                echo "✅ Envoi de mail de test réussi."
+            }
+        }
+    }
 
+    post {
+        always {
+            echo "🧹 Nettoyage Docker"
+            sh 'docker-compose down'
+        }
 
-          // 8️⃣ Déploiement avec Docker Compose
-         stage('Docker Compose') {
-             steps {
-                 script {
-                     sh 'ls -l && cat docker-compose.yml' // debug, optionnel
-                     sh 'docker-compose down || true'
-                     sh 'docker-compose up -d'
-                 }
-             }
-         }
-          stage('Grafana') {
-                        steps {
-                            script {
-                                def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
-                                withCredentials([usernamePassword(credentialsId: 'credential_grafana', usernameVariable: 'GRAFANA_USERNAME', passwordVariable: 'GRAFANA_PASSWORD')]) {
-                                    def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
-                                    sh curlCommand
-                                }
-                            }
-                         }
-                         }
-                        stage('Mailing Test') {
-                                                      steps {
-                                                               echo "mail success"
-                                                           }
-                                                       }
+        success {
+            echo '✅ Pipeline exécuté avec succès.'
+            emailext(
+                subject: "✅ Succès du Pipeline - DevopsSkiStation",
+                body: """
+                    Bonjour,
 
-                                             }
+                    Le pipeline Jenkins s’est exécuté avec succès. 🎉
 
+                    ✔ Projet : DevopsSkiStation
+                    📅 Date : ${new Date()}
+                    📊 Rapport SonarQube joint en PDF
 
+                    Cordialement,
+                    Jenkins
+                """,
+                to: 'saiflaameri00@gmail.com',
+                attachmentsPattern: 'sonar-report.pdf'
+            )
+        }
 
-                                      post {
-                                          always {
-                                              script {
-                                                  sh 'docker-compose down'
-                                              }
-                                          }
-                                          success {
-                                              echo 'The process completed successfully.'
-                                               mail to: 'saiflaameri00@gmail.com',
-                                                         subject: "Succès du Pipeline",
-                                                         body: "Le pipeline a été exécuté avec succès."
+        failure {
+            echo '❌ Le pipeline a échoué.'
+            emailext(
+                subject: "❌ Échec du Pipeline - DevopsSkiStation",
+                body: """
+                    Bonjour,
 
-                                          }
-                                          failure {
-                                              echo 'The process failed.'
-                                              mail to: 'saiflaameri00@gmail.com',
-                                               subject: "Échec du Pipeline",
-                                                         body: "Il y a eu un problème avec l'exécution du pipeline."
+                    Le pipeline Jenkins a échoué. 🚨
 
+                    ✔ Projet : DevopsSkiStation
+                    📅 Date : ${new Date()}
 
-                                          }
-                                      }
-                                  }
+                    Merci de consulter Jenkins pour plus de détails.
+
+                    Cordialement,
+                    Jenkins
+                """,
+                to: 'saiflaameri00@gmail.com'
+            )
+        }
+    }
+}
