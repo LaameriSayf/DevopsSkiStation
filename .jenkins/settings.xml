@@ -7,8 +7,8 @@
         <!-- Nexus authentication -->
         <server>
             <id>nexus</id>
-            <username>admin</username>
-            <password>adminadmin</password>
+            <username>jenkins</username>
+            <password>eyaeya</password>
         </server>
     </servers>
 
