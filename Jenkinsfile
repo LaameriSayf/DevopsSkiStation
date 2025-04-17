@@ -21,10 +21,8 @@ pipeline {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '*/Sayf']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
-                        ]]
+                        branches: [[ name: '*/Sayf' ]],
+                        userRemoteConfigs: [[ url: 'https://github.com/LaameriSayf/DevopsSkiStation.git' ]]
                     ])
                     sh 'echo "[STAGE] Git completed" >> report.txt'
                 }
@@ -57,9 +55,9 @@ pipeline {
                 script {
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=DevopsSkiStation \
-                        -Dsonar.host.url=http://192.168.56.10:9000 \
-                        -Dsonar.login=sqa_... \
+                            -Dsonar.projectKey=DevopsSkiStation \
+                            -Dsonar.host.url=http://192.168.56.10:9000 \
+                            -Dsonar.login=sqa_... \
                         | tee -a report.txt
                     '''
                     sh 'echo "[STAGE] SonarQube Analysis completed" >> report.txt'
@@ -68,7 +66,7 @@ pipeline {
         }
 
         // 5️⃣ Nexus Deploy
-        stage('Nexus') {
+        stage('Nexus Deploy') {
             steps {
                 script {
                     sh 'mvn deploy | tee -a report.txt'
@@ -105,7 +103,7 @@ pipeline {
             }
         }
 
-        // 8️⃣ Docker Compose
+        // 8️⃣ Docker Compose Deploy
         stage('Docker Compose') {
             steps {
                 script {
@@ -116,7 +114,7 @@ pipeline {
             }
         }
 
-        // 9️⃣ Grafana
+        // 9️⃣ Grafana Data Fetch
         stage('Grafana') {
             steps {
                 script {
@@ -137,7 +135,7 @@ pipeline {
         stage('Generate PDF Report') {
             steps {
                 script {
-                    // Si pour une raison report.txt n'existe pas, on le crée
+                    // Assure l'existence de report.txt
                     sh 'if [ ! -f report.txt ]; then echo "No logs found" > report.txt; fi'
                     sh 'pandoc report.txt -o report.pdf'
                     sh 'echo "[STAGE] PDF report generated" >> report.txt'
