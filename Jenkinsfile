@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube'  // Nom du serveur SonarQube configuré dans Jenkins
+        SONARQUBE_SERVER = 'SonarQube'
     }
 
     stages {
@@ -12,7 +12,7 @@ pipeline {
                 script {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '*/Sayf']],  // Branche correcte
+                        branches: [[name: '*/Sayf']],
                         userRemoteConfigs: [[
                             url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                         ]]
@@ -52,25 +52,26 @@ pipeline {
                 }
             }
         }
+
+        // 5️⃣ Génération de rapport PDF
         stage('Generate PDF Report') {
             steps {
                 script {
-                    // Installer pandoc si besoin (ou dans l'image Jenkins Docker si t'en utilises une)
                     sh 'pandoc report.txt -o report.pdf'
                 }
             }
         }
 
-
-     stage('Nexus') {
-                steps {
-                    script {
-                        sh 'mvn deploy'
-                    }
+        // 6️⃣ Nexus Deploy
+        stage('Nexus') {
+            steps {
+                script {
+                    sh 'mvn deploy'
                 }
             }
+        }
 
-   // 6️⃣ Construction de l'image Docker
+        // 7️⃣ Build Docker Image
         stage('Build Docker Image') {
             steps {
                 script {
@@ -78,118 +79,115 @@ pipeline {
                     def dockerImageTag = 'latest'
 
                     sh 'echo "📁 Contenu du workspace actuel :" && pwd && ls -R'
-
                     sh "ls -l target/gestion-station-ski-1.0.jar || exit 1"
-
-                    // Corrige ici selon l'emplacement que tu trouves :
                     sh "docker build -t ${dockerImageName}:${dockerImageTag} -f Dockerfile ."
                 }
             }
         }
 
+        // 8️⃣ Push vers DockerHub
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_PASSWORD'
+                    )]) {
+                        sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                        sh "docker push sayflaameri/gestion-station-ski:latest"
+                    }
+                }
+            }
+        }
 
+        // 9️⃣ Déploiement avec Docker Compose
+        stage('Docker Compose') {
+            steps {
+                script {
+                    sh 'ls -l && cat docker-compose.yml'
+                    sh 'docker-compose down || true'
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
 
+        // 🔟 Appel Grafana
+        stage('Grafana') {
+            steps {
+                script {
+                    def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
+                    withCredentials([usernamePassword(
+                        credentialsId: 'credential_grafana',
+                        usernameVariable: 'GRAFANA_USERNAME',
+                        passwordVariable: 'GRAFANA_PASSWORD'
+                    )]) {
+                        def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
+                        sh curlCommand
+                    }
+                }
+            }
+        }
 
-          // 7️⃣ Push vers DockerHub
-     stage('Push Docker Image') {
-         steps {
-             script {
-                 withCredentials([usernamePassword(
-                     credentialsId: 'docker-hub-credentials',
-                     usernameVariable: 'DOCKERHUB_USERNAME',
-                     passwordVariable: 'DOCKERHUB_PASSWORD'
-                 )]) {
-                     sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
-                     sh "docker push sayflaameri/gestion-station-ski:latest"
-                 }
-             }
-         }
-     }
-
-
-          // 8️⃣ Déploiement avec Docker Compose
-         stage('Docker Compose') {
-             steps {
-                 script {
-                     sh 'ls -l && cat docker-compose.yml' // debug, optionnel
-                     sh 'docker-compose down || true'
-                     sh 'docker-compose up -d'
-                 }
-             }
-         }
-          stage('Grafana') {
-                        steps {
-                            script {
-                                def grafanaUrl = 'http://192.168.56.10:3000/d/haryan-jenkins/jenkins3a-performance-and-health-overview'
-                                withCredentials([usernamePassword(credentialsId: 'credential_grafana', usernameVariable: 'GRAFANA_USERNAME', passwordVariable: 'GRAFANA_PASSWORD')]) {
-                                    def curlCommand = "curl -X GET -u ${GRAFANA_USERNAME}:${GRAFANA_PASSWORD} -H 'Content-Type: application/json' ${grafanaUrl}"
-                                    sh curlCommand
-                                }
-                            }
-                         }
-                         }
-                        stage('Mailing Test') {
-                                                      steps {
-                                                               echo "mail success"
-                                                           }
-                                                       }
-
-                                             }
-
-
-post {
-    always {
-        echo "Pipeline terminé (état : ${currentBuild.currentResult})"
-        sh 'docker-compose down'
+        // 🔔 Test de mailing (juste pour log)
+        stage('Mailing Test') {
+            steps {
+                echo 'mail success'
+            }
+        }
     }
 
-    success {
-        emailext(
-            to: 'saiflaameri00@gmail.com',
-            subject: "✅ Succès : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <h3>✅ Build réussie !</h3>
-                <p>Job : ${env.JOB_NAME}</p>
-                <p>Build # : ${env.BUILD_NUMBER}</p>
-                <p>URL : <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                <p>Vous trouverez le rapport PDF en pièce jointe.</p>
-            """,
-            attachmentsPattern: 'report.pdf',
-            mimeType: 'text/html'
-        )
-    }
+    post {
+        always {
+            echo "Pipeline terminé (état : ${currentBuild.currentResult})"
+            sh 'docker-compose down'
+        }
 
-    unstable {
-        emailext(
-            to: 'saiflaameri00@gmail.com',
-            subject: "⚠️ Instable : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <h3>⚠️ Build instable</h3>
-                <p>Job : ${env.JOB_NAME}</p>
-                <p>Build # : ${env.BUILD_NUMBER}</p>
-                <p>Vérifiez les tests ou les warnings.</p>
-            """,
-            attachmentsPattern: 'report.pdf',
-            mimeType: 'text/html'
-        )
-    }
+        success {
+            emailext(
+                to: 'saiflaameri00@gmail.com',
+                subject: "✅ Succès : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    <h3>✅ Build réussie !</h3>
+                    <p>Job : ${env.JOB_NAME}</p>
+                    <p>Build # : ${env.BUILD_NUMBER}</p>
+                    <p>URL : <a href=\"${env.BUILD_URL}\">${env.BUILD_URL}</a></p>
+                    <p>Vous trouverez le rapport PDF en pièce jointe.</p>
+                """,
+                attachmentsPattern: 'report.pdf',
+                mimeType: 'text/html'
+            )
+        }
 
-    failure {
-        emailext(
-            to: 'saiflaameri00@gmail.com',
-            subject: "❌ Échec : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <h3>❌ Build échouée</h3>
-                <p>Job : ${env.JOB_NAME}</p>
-                <p>Build # : ${env.BUILD_NUMBER}</p>
-                <p>Consultez <a href="${env.BUILD_URL}">${env.BUILD_URL}</a> pour plus de détails.</p>
-                <p>Le rapport PDF est en pièce jointe.</p>
-            """,
-            attachmentsPattern: 'report.pdf',
-            mimeType: 'text/html'
-        )
+        unstable {
+            emailext(
+                to: 'saiflaameri00@gmail.com',
+                subject: "⚠️ Instable : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    <h3>⚠️ Build instable</h3>
+                    <p>Job : ${env.JOB_NAME}</p>
+                    <p>Build # : ${env.BUILD_NUMBER}</p>
+                    <p>Vérifiez les tests ou les warnings.</p>
+                """,
+                attachmentsPattern: 'report.pdf',
+                mimeType: 'text/html'
+            )
+        }
+
+        failure {
+            emailext(
+                to: 'saiflaameri00@gmail.com',
+                subject: "❌ Échec : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    <h3>❌ Build échouée</h3>
+                    <p>Job : ${env.JOB_NAME}</p>
+                    <p>Build # : ${env.BUILD_NUMBER}</p>
+                    <p>Consultez <a href=\"${env.BUILD_URL}\">${env.BUILD_URL}</a> pour plus de détails.</p>
+                    <p>Le rapport PDF est en pièce jointe.</p>
+                """,
+                attachmentsPattern: 'report.pdf',
+                mimeType: 'text/html'
+            )
+        }
     }
 }
-
-                                      }
-                                  }
