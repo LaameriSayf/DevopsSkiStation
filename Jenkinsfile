@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-
         IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
         IMAGE_TAG = 'latest'
 
@@ -12,7 +11,7 @@ pipeline {
         NEXUS_REPO = 'gestionski'
         NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
 
-        NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
+        NEXUS_CREDENTIAL_ID = 'docker-nexus-creds'  // Updated to use your Nexus credential ID
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
 
@@ -79,11 +78,13 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     echo 'Logging into Docker Hub...'
-                    sh '''
-                    echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
-                    echo "Pushing image to Docker Hub..."
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'Docker_ID', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                        sh '''
+                        echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
+                        echo "Pushing image to Docker Hub..."
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
+                    }
                     def endTime = System.currentTimeMillis()
                     echo "Docker Hub push duration: ${(endTime - startTime) / 1000}s"
                 }
