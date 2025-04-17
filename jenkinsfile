@@ -292,6 +292,26 @@ pipeline {
                 }
             }
         }
+        stage('Check Spring Boot Logs') {
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification des logs du conteneur sonar-app-1..."
+                        docker logs sonar-app-1
+                        '''
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Check Spring Boot Logs'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Check Spring Boot Logs : ${duration}s"
+                    }
+                }
+            }
+        }
 
         stage('Docker Compose') {
             steps {
@@ -357,12 +377,13 @@ pipeline {
                         echo "Attente que l'application Spring Boot soit prête (60 sec)..."
                         sleep 60
                         echo "Vérification de l'endpoint Prometheus de Spring Boot..."
-                        for i in {1..10}; do
+                        for i in $(seq 1 10); do
+                            echo "Tentative $i/10..."
                             if curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/actuator/prometheus | grep -q "200"; then
                                 echo "L'endpoint Prometheus de Spring Boot est accessible (code HTTP : 200)"
                                 exit 0
                             fi
-                            echo "L'endpoint n'est pas encore prêt, tentative $i/10..."
+                            echo "L'endpoint n'est pas encore prêt, nouvelle tentative dans 10 secondes..."
                             sleep 10
                         done
                         echo "Échec : l'endpoint Prometheus de Spring Boot n'est pas accessible après 10 tentatives !"
