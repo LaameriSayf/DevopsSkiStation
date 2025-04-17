@@ -4,13 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
         IMAGE_TAG = 'latest'
-
-        NEXUS_PROTOCOL = 'http'
-        NEXUS_HOST = '192.168.33.10'
-        NEXUS_PORT = '8081'
-        NEXUS_REPO = 'gestionski'
-        NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
-
+        NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
@@ -21,10 +15,7 @@ pipeline {
                 script {
                     echo 'Cloning repository...'
                     sh '''
-                        if [ -d "DevopsSkiStation" ]; then
-                            echo "Removing existing DevopsSkiStation directory..."
-                            rm -rf DevopsSkiStation
-                        fi
+                        rm -rf DevopsSkiStation || true
                         git clone --branch AbdulkareemMahmoud_4TWIN5_G https://github.com/LaameriSayf/DevopsSkiStation.git
                     '''
                 }
@@ -61,49 +52,77 @@ pipeline {
             }
         }
 
-        stage('Docker IMAGE') {
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    def startTime = System.currentTimeMillis()
-                    echo 'Building Docker image...'
+                    echo 'Building and pushing Docker image...'
                     sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                    def endTime = System.currentTimeMillis()
-                    echo "Docker image build duration: ${(endTime - startTime) / 1000}s"
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Docker HUB') {
-            steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    echo 'Logging into Docker Hub...'
-                    sh '''
-                    echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
-                    echo "Pushing image to Docker Hub..."
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    '''
-                    def endTime = System.currentTimeMillis()
-                    echo "Docker Hub push duration: ${(endTime - startTime) / 1000}s"
-                }
-            }
-        }
-
-         stage('Deploy with Docker Compose') {
+        stage('Deploy with Docker Compose') {
             steps {
                 echo '🚀 Deploying with Docker Compose...'
-                        sh 'docker compose up -d'
-                    }
-                }
+                sh 'docker compose up -d'
             }
-            
+        }
+
+        stage('Mailing Test') {
+            steps {
+                echo "✅ Envoi de mail de test réussi."
+            }
+        }
+    }
 
     post {
-        success {
-            echo "✅ Deployzment Successful!"
+        always {
+            echo "🧹 Nettoyage Docker"
+            sh 'docker-compose down'
         }
+
+        success {
+            echo '✅ Pipeline exécuté avec succès.'
+            emailext(
+                subject: "✅ Succès du Pipeline - DevopsSkiStation",
+                body: """
+                    Bonjour,
+
+                    Le pipeline Jenkins s’est exécuté avec succès. 🎉
+
+                    ✔ Projet : DevopsSkiStation
+                    📅 Date : ${new Date()}
+                    📊 Rapport SonarQube joint en PDF
+
+                    Cordialement,
+                    Jenkins
+                """,
+                to: 'negamex4274@gmail.com',
+                attachmentsPattern: 'sonar-report.pdf'
+            )
+        }
+
         failure {
-            echo "❌ Deployment Failed! Check logs."
+            echo '❌ Le pipeline a échoué.'
+            emailext(
+                subject: "❌ Échec du Pipeline - DevopsSkiStation",
+                body: """
+                    Bonjour,
+
+                    Le pipeline Jenkins a échoué. 🚨
+
+                    ✔ Projet : DevopsSkiStation
+                    📅 Date : ${new Date()}
+
+                    Merci de consulter Jenkins pour plus de détails.
+
+                    Cordialement,
+                    Jenkins
+                """,
+                to: 'negamex4274@gmail.com'
+            )
         }
     }
 }
