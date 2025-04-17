@@ -76,7 +76,7 @@ pipeline {
                 emailext(
                     subject: "Test Email from Jenkins",
                     body: "This is a test email to ensure the mailing functionality is working in the Jenkins pipeline.",
-                    to: 'megamex421@gmail.com'
+                    to: 'negamex4274@gmail.com'
                 )
             }
         }
@@ -98,7 +98,7 @@ pipeline {
                     Cordialement,
                     Jenkins
                 """,
-                to: 'megamex421@gmail.com'
+                to: 'negamex4274@gmail.com'
             )
         }
 
@@ -119,7 +119,7 @@ pipeline {
                     Cordialement,
                     Jenkins
                 """,
-                to: 'megamex421@gmail.com'
+                to: 'negamex4274@gmail.com'
             )
         }
     }
