@@ -17,7 +17,7 @@ services:
       - devops_network
 
   gestionski:
-    image: 192.168.33.10:8082/mahmoudabdulkareem/gestion-stationski:latest
+    image: 192.168.33.10:8081/mahmoudabdulkareem/gestion-stationski:latest
 
     container_name: gestionski
     ports:
