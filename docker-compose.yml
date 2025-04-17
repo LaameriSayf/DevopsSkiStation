@@ -17,7 +17,7 @@ services:
       - devops_network
 
   gestionski:
-    image: 192.168.33.10:8081/mahmoudabdulkareem/gestion-stationski:latest
+    image: 192.168.33.10:8082/mahmoudabdulkareem/gestion-stationski:latest
 
     container_name: gestionski
     ports:
@@ -47,7 +47,7 @@ services:
     image: sonatype/nexus3
     container_name: nexus
     ports:
-      - "8084:8081"
+      - "8082:8081"
     environment:
       - NEXUS_CONTEXT_PATH=/nexus
     volumes:
