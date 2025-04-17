@@ -3,7 +3,7 @@ pipeline {
 
     environment {
     NEXUS_REPO = '192.168.33.10:8081'
-    IMAGE_NAME = 'EyaChamekh_G5_StationSki'
+    IMAGE_NAME = 'eyachamekh-g5-stationski'
     IMAGE_TAG = 'latest'
     GITHUB = credentials('github-creds')
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
