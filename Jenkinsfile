@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-
         IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
         IMAGE_TAG = 'latest'
 
@@ -90,37 +89,13 @@ pipeline {
             }
         }
 
-        stage('DOCKER-COMPOSE') {
-            steps {
-                script {
-                    def startTime = System.currentTimeMillis()
-                    echo 'Checking for docker-compose.yml...'
-                    sh 'ls -la'
-                    if (sh(script: 'test -f docker-compose.yml', returnStatus: true) != 0) {
-                        error 'docker-compose.yml not found!'
+         stage('Deploy with Docker Compose') {
+                    steps {
+                        echo '🚀 Deploying with Docker Compose...'
+                        sh 'docker compose up -d'
                     }
-
-                    echo 'Checking Docker image...'
-                    sh "docker images | grep ${IMAGE_NAME}"
-
-                    // Remove old container if exists
-                    sh '''
-                    if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
-                        echo "Stopping and removing mysql-test container..."
-                        docker stop mysql-test || true
-                        docker rm mysql-test || true
-                    fi
-                    '''
-
-                    echo 'Starting Docker Compose...'
-                    sh "docker compose up -d --build"
-                    sh 'docker compose ps'
-                    def endTime = System.currentTimeMillis()
-                    echo "Docker Compose duration: ${(endTime - startTime) / 1000}s"
                 }
             }
-        }
-    }
 
     post {
         success {
