@@ -5,7 +5,7 @@ pipeline {
     NEXUS_REPO = '192.168.33.10:8081'
     IMAGE_NAME = 'eyachamekh/eyachamekh-g5-stationski'
     IMAGE_TAG = 'latest'
-    DOCKER_HUB_CREDS = credentials('dockerhub-creds')
+    DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
     NEXUS_CREDENTIAL_ID = 'nexus'
      }
