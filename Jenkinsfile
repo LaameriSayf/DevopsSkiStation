@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube'
-        SONARQUBE_URL = 'http://192.168.56.10:9000'
-        SONARQUBE_PROJECT = 'DevopsSkiStation'
+        SONARQUBE_SERVER = 'SonarQube'  // Nom du serveur SonarQube dans Jenkins
     }
 
     stages {
@@ -40,58 +38,56 @@ pipeline {
         // 4️⃣ SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONARQUBE_PROJECT} \
-                        -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=sqa_5b84f2533f8e4f1c262920e14dc8e8b7644fcc14
-                    """
-                }
-                // Attendre que l'analyse SonarQube soit complète
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: false
-                }
-            }
-        }
-
-        // 5️⃣ Générer le rapport PDF depuis Sonar
-        stage('Generate SonarQube PDF') {
-            steps {
                 script {
-                    // Solution améliorée pour le PDF
-                    def reportUrl = "${SONARQUBE_URL}/api/project_badges/measure?project=${SONARQUBE_PROJECT}&metric=alert_status"
-                    def dashboardUrl = "${SONARQUBE_URL}/dashboard?id=${SONARQUBE_PROJECT}"
-
-                    // Créer un rapport HTML temporaire
-                    writeFile file: 'sonar-report.html', text: """
-                        <html>
-                            <head>
-                                <title>SonarQube Report</title>
-                                <meta http-equiv="refresh" content="10">
-                            </head>
-                            <body>
-                                <h1>SonarQube Analysis Report</h1>
-                                <p>Generated at: ${new Date()}</p>
-                                <iframe src="${dashboardUrl}" width="100%" height="800" frameborder="0"></iframe>
-                            </body>
-                        </html>
-                    """
-
-                    // Attendre que le dashboard soit prêt
-                    sh 'sleep 120' // Augmentez ce délai si nécessaire
-
-                    // Générer le PDF avec wkhtmltopdf
-                    sh """
-                        wkhtmltopdf \
-                        --javascript-delay 30000 \
-                        --no-stop-slow-scripts \
-                        --enable-javascript \
-                        sonar-report.html sonar-report.pdf
-                    """
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=DevopsSkiStation \
+                        -Dsonar.host.url=http://192.168.56.10:9000 \
+                        -Dsonar.login=sqa_5b84f2533f8e4f1c262920e14dc8e8b7644fcc14
+                    '''
                 }
             }
         }
+
+        // 5️⃣ Générer le rapport PDF depuis Sonar (option simple via wkhtmltopdf)
+      stage('Generate SonarQube PDF') {
+          steps {
+              script {
+                  // 1. Récupérer les données via l'API SonarQube (format JSON)
+                  def sonarData = sh(
+                      script: """
+                          curl -s -u admin:admin \
+                          "${SONARQUBE_URL}/api/measures/component?component=${SONARQUBE_PROJECT}&metricKeys=bugs,vulnerabilities,code_smells,coverage,duplicated_lines_density" \
+                          | jq -r '.component.measures[] | [.metric,.value] | @tsv'
+                      """,
+                      returnStdout: true
+                  ).trim()
+
+                  // 2. Générer un rapport HTML simple
+                  def htmlReport = """
+                      <html>
+                      <head><title>SonarQube Report</title></head>
+                      <body>
+                          <h1>Rapport SonarQube - ${SONARQUBE_PROJECT}</h1>
+                          <p>Date: ${new Date()}</p>
+                          <table border="1">
+                              <tr><th>Métrique</th><th>Valeur</th></tr>
+                              ${sonarData.split('\n').collect { line ->
+                                  def parts = line.split('\t')
+                                  "<tr><td>${parts[0]}</td><td>${parts[1]}</td></tr>"
+                              }.join('\n')}
+                          </table>
+                          <p>Lien complet: <a href="${SONARQUBE_URL}/dashboard?id=${SONARQUBE_PROJECT}">Dashboard SonarQube</a></p>
+                      </body>
+                      </html>
+                  """
+
+                  // 3. Convertir en PDF avec wkhtmltopdf
+                  writeFile file: 'sonar-report.html', text: htmlReport
+                  sh 'wkhtmltopdf --quiet sonar-report.html sonar-report.pdf'
+              }
+          }
+      }
 
         // 6️⃣ Déploiement vers Nexus
         stage('Nexus') {
@@ -154,7 +150,7 @@ pipeline {
             }
         }
 
-        // 🔔 Mailing Test
+        // 🔔 Mailing Test (optionnel)
         stage('Mailing Test') {
             steps {
                 echo "✅ Envoi de mail de test réussi."
@@ -166,7 +162,6 @@ pipeline {
         always {
             echo "🧹 Nettoyage Docker"
             sh 'docker-compose down'
-            archiveArtifacts artifacts: 'sonar-report.pdf', allowEmptyArchive: true
         }
 
         success {
@@ -176,7 +171,7 @@ pipeline {
                 body: """
                     Bonjour,
 
-                    Le pipeline Jenkins s'est exécuté avec succès. 🎉
+                    Le pipeline Jenkins s’est exécuté avec succès. 🎉
 
                     ✔ Projet : DevopsSkiStation
                     📅 Date : ${new Date()}
