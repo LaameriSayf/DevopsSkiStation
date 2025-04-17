@@ -11,8 +11,7 @@ pipeline {
         NEXUS_REPO = 'gestionski'
         NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
 
-        NEXUS_CREDENTIAL_ID = 'docker-nexus-creds'  // Updated to use your Nexus credential ID
-        DOCKERHUB_CREDENTIALS = credentials('docker-nexus-creds'')
+        NEXUS_CREDENTIAL_ID = 'docker-nexus-creds'  // Using your Nexus credentials ID for Docker login
     }
 
     stages {
@@ -77,8 +76,8 @@ pipeline {
             steps {
                 script {
                     def startTime = System.currentTimeMillis()
-                    echo 'Logging into Docker Hub...'
-                    withCredentials([usernamePassword(credentialsId: 'docker-nexus-creds'', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
+                    echo 'Logging into Docker Hub using docker-nexus-creds...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-nexus-creds', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
                         sh '''
                         echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
                         echo "Pushing image to Docker Hub..."
@@ -109,26 +108,4 @@ pipeline {
                     if docker ps -a --format '{{.Names}}' | grep -q "^mysql-test$"; then
                         echo "Stopping and removing mysql-test container..."
                         docker stop mysql-test || true
-                        docker rm mysql-test || true
-                    fi
-                    '''
-
-                    echo 'Starting Docker Compose...'
-                    sh "docker compose up -d --build"
-                    sh 'docker compose ps'
-                    def endTime = System.currentTimeMillis()
-                    echo "Docker Compose duration: ${(endTime - startTime) / 1000}s"
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Deployment Successful!"
-        }
-        failure {
-            echo "❌ Deployment Failed! Check logs."
-        }
-    }
-}
+                        docker
