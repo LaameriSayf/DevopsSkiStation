@@ -28,6 +28,9 @@ services:
       - ./logs:/logs
     depends_on:
       - mysqldb
+    dns:
+      - 127.0.0.11
+      - 8.8.8.8
     networks:
       - devops_network
 
@@ -79,6 +82,9 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
     depends_on:
       - gestionski
+    networks:
+      - devops_network
+
 volumes:
   jenkins_home:
   nexus_data:
