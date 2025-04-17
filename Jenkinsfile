@@ -23,7 +23,7 @@ pipeline {
         stage('MAVEN Build') {
             steps {
                 script {
-                    sh 'mvn clean compile'
+                    sh 'mvn clean package'
                 }
             }
         }
