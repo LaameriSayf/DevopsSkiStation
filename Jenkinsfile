@@ -120,24 +120,35 @@ pipeline {
                          }
                          }
                         stage('Mailing Test') {
-                                   steps {
-                                       script {
-                                           emailext(
-                                               to: 'eya.bouthouri@esprit.tn',
-                                               subject: "✅ Test email Jenkins",
-                                               body: """Hello,
+                                                      steps {
+                                                               echo "mail success"
+                                                           }
+                                                       }
 
-                       Ceci est un test d'envoi de mail depuis Jenkins. 🎉
+                                             }
 
-                       Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
-                       Lien: ${env.BUILD_URL}
-                       """,
-                                               mimeType: 'text/plain'
-                                           )
-                                       }
-                                   }
-                               }
 
-      }
-  }
 
+                                      post {
+                                          always {
+                                              script {
+                                                  sh 'docker-compose down'
+                                              }
+                                          }
+                                          success {
+                                              echo 'The process completed successfully.'
+                                               mail to: 'eya.bouthouri@esprit.tn',
+                                                         subject: "Succès du Pipeline",
+                                                         body: "Le pipeline a été exécuté avec succès."
+
+                                          }
+                                          failure {
+                                              echo 'The process failed.'
+                                              mail to: 'eya.bouthouri@esprit.tn',
+                                               subject: "Échec du Pipeline",
+                                                         body: "Il y a eu un problème avec l'exécution du pipeline."
+
+
+                                          }
+                                      }
+                                  }
