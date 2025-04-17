@@ -137,14 +137,14 @@ pipeline {
                                           }
                                           success {
                                               echo 'The process completed successfully.'
-                                               mail to: 'eya.bouthouri@esprit.tn',
+                                               mail to: 'saiflaameri00@gmail.com',
                                                          subject: "Succès du Pipeline",
                                                          body: "Le pipeline a été exécuté avec succès."
 
                                           }
                                           failure {
                                               echo 'The process failed.'
-                                              mail to: 'eya.bouthouri@esprit.tn',
+                                              mail to: 'saiflaameri00@gmail.com',
                                                subject: "Échec du Pipeline",
                                                          body: "Il y a eu un problème avec l'exécution du pipeline."
 
