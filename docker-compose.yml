@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.8"  # Recommended version for compatibility
 
 services:
   mysqldb:
@@ -40,8 +40,6 @@ services:
     restart: unless-stopped
     networks:
       - devops_network
-    environment:
-      - JAVA_OPTS=-Duser.timezone=UTC
 
   nexus:
     image: sonatype/nexus3
@@ -55,6 +53,7 @@ services:
     networks:
       - devops_network
 
+
   sonarqube:
     image: sonarqube:lts
     container_name: sonarqube
@@ -64,12 +63,10 @@ services:
     networks:
       - devops_network
 
-
-
 volumes:
   jenkins_home:
   nexus_data:
-  mysql_data:
+  mysql_data:  # Persistent volume for MySQL
 
 networks:
   devops_network:
