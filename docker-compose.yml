@@ -3,7 +3,7 @@ services:
   app:
     image: ouday2025/devopsskistation:${IMAGE_TAG}
     ports:
-      - "8099:8099"
+      - "8099:8090"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/test_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: "root"
