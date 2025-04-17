@@ -68,74 +68,6 @@ pipeline {
             }
         }
 
-        stage('Start MYSQL') {
-            steps {
-                script {
-                    def pipelineReport = readJSON file: env.pipelineReportFile
-                    def startTime = System.currentTimeMillis()
-                    try {
-                        sh '''
-                        set -e
-                        echo "Démarrage de MySQL..."
-                        if ! docker network ls --format '{{.Name}}' | grep -q "^mynetwork$"; then
-                            echo "Création du réseau mynetwork..."
-                            docker network create mynetwork
-                        fi
-                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                                echo "Le conteneur MySQL est déjà en cours d'exécution."
-                            else
-                                echo "Le conteneur MySQL existe mais est arrêté. Redémarrage..."
-                                docker start $MYSQL_CONTAINER
-                            fi
-                        else
-                            echo "Démarrage d'un nouveau conteneur MySQL..."
-                            docker run --name $MYSQL_CONTAINER \
-                                --network mynetwork \
-                                -e MYSQL_DATABASE=$DB_NAME \
-                                -e MYSQL_ROOT_PASSWORD="$DB_PASS" \
-                                -p $DB_PORT:3306 \
-                                --memory="1g" \
-                                --cpus="2" \
-                                -d mysql:8.0
-                        fi
-                        echo "Attente de MySQL (120 sec)..."
-                        sleep 120
-                        if ! docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                            echo "MySQL n'a pas démarré !"
-                            docker logs $MYSQL_CONTAINER
-                            exit 1
-                        fi
-                        echo "Vérification de la connexion à MySQL..."
-                        for i in {1..40}; do
-                            echo "Tentative $i : Vérification de l'état du conteneur..."
-                            docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
-                            echo "Vérification des ports exposés..."
-                            docker port $MYSQL_CONTAINER
-                            if docker exec $MYSQL_CONTAINER sh -c "mysql -uroot -p\\"$DB_PASS\\" -e 'SELECT 1;'" > /dev/null 2>&1; then
-                                echo "MySQL est prêt !"
-                                break
-                            fi
-                            echo "MySQL n'est pas encore prêt, attente... (tentative $i)"
-                            docker logs $MYSQL_CONTAINER | tail -n 10
-                            sleep 3
-                        done
-                        if ! docker exec $MYSQL_CONTAINER sh -c "mysql -uroot -p\\"$DB_PASS\\" -e 'SELECT 1;'" > /dev/null 2>&1; then
-                            echo "Échec de la connexion à MySQL après 40 tentatives !"
-                            docker logs $MYSQL_CONTAINER
-                            exit 1
-                        fi
-                        '''
-                    } finally {
-                        def duration = (System.currentTimeMillis() - startTime) / 1000
-                        pipelineReport['stages']['Start MySQL'] = duration
-                        writeJSON file: env.pipelineReportFile, json: pipelineReport
-                        echo "Durée de l'étape Start MySQL : ${duration}s"
-                    }
-                }
-            }
-        }
-
         stage('Build') {
             steps {
                 script {
@@ -292,58 +224,79 @@ pipeline {
                 }
             }
         }
+
         stage('Docker Compose') {
-                    steps {
-                        script {
-                            def pipelineReport = readJSON file: env.pipelineReportFile
-                            def startTime = System.currentTimeMillis()
-                            try {
-                                sh '''
-                                set -e
-                                echo "Vérification de la présence de docker-compose.yml..."
-                                if [ -f docker-compose.yml ]; then
-                                    echo "Fichier docker-compose.yml trouvé."
-                                    cat docker-compose.yml
-                                else
-                                    echo "Erreur : docker-compose.yml introuvable !"
-                                    exit 1
-                                fi
-                                echo "Vérification de l'image Docker..."
-                                docker images | grep ${IMAGE_NAME}
-                                echo "Vérification et arrêt du conteneur mysql-test..."
-                                if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
-                                    echo "Arrêt et suppression du conteneur mysql-test..."
-                                    docker stop $MYSQL_CONTAINER || true
-                                    docker rm $MYSQL_CONTAINER || true
-                                fi
-                                echo "Vérification des ports utilisés..."
-                                docker ps -a --format '{{.Names}} {{.Ports}}'
-                                echo "Exportation de IMAGE_TAG pour Docker Compose..."
-                                export IMAGE_TAG=${IMAGE_TAG}
-                                echo "Vérification de la valeur de IMAGE_TAG..."
-                                echo "IMAGE_TAG=${IMAGE_TAG}"
-                                echo "Validation de docker-compose.yml..."
-                                docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
-                                echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
-                                docker-compose up -d
-                                echo "Vérification des conteneurs lancés..."
-                                docker-compose ps
-                                '''
-                                pipelineReport['dockerComposeStatus'] = sh(script: '''
-                                docker-compose ps --services | while read service; do
-                                    status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | tr -d '\n')
-                                    echo "$service $status"
-                                done
-                                ''', returnStdout: true).trim()
-                            } finally {
-                                def duration = (System.currentTimeMillis() - startTime) / 1000
-                                pipelineReport['stages']['Docker Compose'] = duration
-                                writeJSON file: env.pipelineReportFile, json: pipelineReport
-                                echo "Durée de l'étape Docker Compose : ${duration}s"
-                            }
-                        }
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de la présence de docker-compose.yml..."
+                        if [ -f docker-compose.yml ]; then
+                            echo "Fichier docker-compose.yml trouvé."
+                            cat docker-compose.yml
+                        else
+                            echo "Erreur : docker-compose.yml introuvable !"
+                            exit 1
+                        fi
+                        echo "Vérification de l'image Docker..."
+                        docker images | grep ${IMAGE_NAME}
+                        echo "Vérification et arrêt du conteneur mysql-test..."
+                        if docker ps -a --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$"; then
+                            echo "Arrêt et suppression du conteneur mysql-test..."
+                            docker stop $MYSQL_CONTAINER || true
+                            docker rm $MYSQL_CONTAINER || true
+                        fi
+                        echo "Vérification des ports utilisés..."
+                        docker ps -a --format '{{.Names}} {{.Ports}}'
+                        echo "Exportation de IMAGE_TAG et DB_PASS pour Docker Compose..."
+                        export IMAGE_TAG=${IMAGE_TAG}
+                        export DB_PASS="$DB_PASS"
+                        echo "Vérification des valeurs exportées..."
+                        echo "IMAGE_TAG=${IMAGE_TAG}"
+                        echo "DB_PASS=${DB_PASS}"
+                        echo "Validation de docker-compose.yml..."
+                        docker-compose config || { echo "Erreur : échec de la validation Docker Compose" >&2; exit 1; }
+                        echo "Lancement de Docker Compose avec IMAGE_TAG=${IMAGE_TAG}..."
+                        docker-compose up -d
+                        echo "Attente que les services soient prêts (max 120 sec)..."
+                        for i in $(seq 1 40); do
+                            if docker-compose ps app | grep -q "Up (healthy)" && docker-compose ps mysql | grep -q "Up (healthy)"; then
+                                echo "Les services app et mysql sont prêts !"
+                                break
+                            fi
+                            echo "Services pas encore prêts, attente 3 secondes... (tentative $i/40)"
+                            docker-compose logs app | tail -n 10
+                            docker-compose logs mysql | tail -n 10
+                            sleep 3
+                        done
+                        if [ $i -eq 40 ]; then
+                            echo "Échec : les services ne sont pas prêts après 40 tentatives !"
+                            docker-compose logs app
+                            docker-compose logs mysql
+                            exit 1
+                        fi
+                        echo "Vérification des conteneurs lancés..."
+                        docker-compose ps
+                        '''
+                        pipelineReport['dockerComposeStatus'] = sh(script: '''
+                        docker-compose ps --services | while read service; do
+                            status=$(docker-compose ps $service | awk 'NR>2 {print $6, $7}' | tr -d '\n')
+                            echo "$service $status"
+                        done
+                        ''', returnStdout: true).trim()
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Docker Compose'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Docker Compose : ${duration}s"
                     }
                 }
+            }
+        }
+
         stage('Check Spring Boot Logs') {
             steps {
                 script {
@@ -365,8 +318,6 @@ pipeline {
             }
         }
 
-
-
         stage('Verify Spring Boot Prometheus Endpoint') {
             steps {
                 script {
@@ -375,8 +326,6 @@ pipeline {
                     try {
                         sh '''
                         set -e
-                        echo "Attente que l'application Spring Boot soit prête (60 sec)..."
-                        sleep 60
                         echo "Vérification de l'endpoint Prometheus de Spring Boot..."
                         for i in $(seq 1 10); do
                             echo "Tentative $i/10..."
@@ -549,11 +498,6 @@ pipeline {
                     sh '''
                         set -e
                         echo "Nettoyage de l'environnement (pipeline réussi)..."
-                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
-                            echo "Arrêt et suppression du conteneur $MYSQL_CONTAINER..."
-                            docker stop $MYSQL_CONTAINER || true
-                            docker rm $MYSQL_CONTAINER || true
-                        fi
                         if [ -f docker-compose.yml ]; then
                             echo "Contenu de docker-compose.yml avant arrêt :"
                             cat docker-compose.yml
@@ -581,13 +525,7 @@ pipeline {
                     )
                 } else {
                     sh '''
-                        echo "Pipeline échoué, préservation du conteneur $MYSQL_CONTAINER pour le débogage..."
-                        if docker ps --format '{{.Names}}' | grep -q "^$MYSQL_CONTAINER$" > /dev/null 2>&1; then
-                            echo "Conteneur $MYSQL_CONTAINER préservé pour débogage."
-                            docker ps -a --format '{{.Names}} {{.Status}}' | grep $MYSQL_CONTAINER
-                        else
-                            echo "Conteneur $MYSQL_CONTAINER non trouvé, probablement déjà supprimé."
-                        fi
+                        echo "Pipeline échoué, préservation des conteneurs pour le débogage..."
                         if [ -f docker-compose.yml ]; then
                             echo "Contenu de docker-compose.yml avant arrêt :"
                             cat docker-compose.yml
