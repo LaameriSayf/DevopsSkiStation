@@ -73,13 +73,16 @@ pipeline {
         stage('Mailing Test') {
             steps {
                 echo "✅ Envoi de mail de test réussi."
+                emailext(
+                    subject: "Test Email from Jenkins",
+                    body: "This is a test email to ensure the mailing functionality is working in the Jenkins pipeline.",
+                    to: 'negamex4274@gmail.com'
+                )
             }
         }
     }
 
     post {
-
-
         success {
             echo '✅ Pipeline exécuté avec succès.'
             emailext(
@@ -91,13 +94,11 @@ pipeline {
 
                     ✔ Projet : DevopsSkiStation
                     📅 Date : ${new Date()}
-                    📊 Rapport SonarQube joint en PDF
 
                     Cordialement,
                     Jenkins
                 """,
-                to: 'negamex4274@gmail.com',
-                attachmentsPattern: 'sonar-report.pdf'
+                to: 'negamex4274@gmail.com'
             )
         }
 
