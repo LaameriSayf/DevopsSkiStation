@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     environment {
+<<<<<<< Updated upstream
         IMAGE_NAME = 'mahmoudabdulkareem1/gestion-stationski'
+=======
+        IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
+>>>>>>> Stashed changes
         IMAGE_TAG = 'latest'
 
         NEXUS_PROTOCOL = 'http'

@@ -6,8 +6,13 @@
     <servers>
         <server>
             <id>nexus</id>
+<<<<<<< Updated upstream
             <username>devopsint</username>
             <password>Blackcat12</password>
+=======
+            <username>admin</username>
+            <password>admin</password>
+>>>>>>> Stashed changes
         </server>
     </servers>
 
