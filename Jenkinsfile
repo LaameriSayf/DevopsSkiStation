@@ -128,27 +128,31 @@ pipeline {
                                              }
 
 
+ post {
+        always {
+            script {
+                sh 'docker-compose down'
+            }
+        }
 
-                                      post {
-                                          always {
-                                              script {
-                                                  sh 'docker-compose down'
-                                              }
-                                          }
-                                          success {
-                                              echo 'The process completed successfully.'
-                                               mail to: 'eya.bouthouri@esprit.tn',
-                                                         subject: "Succès du Pipeline",
-                                                         body: "Le pipeline a été exécuté avec succès."
+        success {
+            echo 'The process completed successfully.'
+            emailext(
+                to: 'eya.bouthouri@esprit.tn',
+                subject: "✅ Succès du Pipeline",
+                body: "Le pipeline a été exécuté avec succès.",
+                mimeType: 'text/plain'
+            )
+        }
 
-                                          }
-                                          failure {
-                                              echo 'The process failed.'
-                                              mail to: 'eya.bouthouri@esprit.tn',
-                                               subject: "Échec du Pipeline",
-                                                         body: "Il y a eu un problème avec l'exécution du pipeline."
-
-
-                                          }
-                                      }
-                                  }
+        failure {
+            echo 'The process failed.'
+            emailext(
+                to: 'eya.bouthouri@esprit.tn',
+                subject: "❌ Échec du Pipeline",
+                body: "Il y a eu un problème avec l'exécution du pipeline.",
+                mimeType: 'text/plain'
+            )
+        }
+    }
+}
