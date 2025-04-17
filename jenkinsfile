@@ -97,7 +97,7 @@ pipeline {
                                 -p $DB_PORT:3306 \
                                 --memory="1g" \
                                 --cpus="2" \
-                                -d mysql:8.0
+                                -d mysql:latest
                         fi
                         echo "Attente de MySQL (120 sec)..."
                         sleep 120
