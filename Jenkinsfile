@@ -7,6 +7,8 @@ pipeline {
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
+        SONARQUBE_URL = "http://192.168.33.10:9000"
+        SONARQUBE_CREDENTIALS = credentials('SonarQube_Credentials') // Update this as per your setup
     }
 
     stages {
@@ -29,6 +31,8 @@ pipeline {
             }
         }
 
+
+
         stage('Compile') {
             steps {
                 echo 'Compiling project...'
@@ -40,6 +44,23 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 sh 'mvn test'
+            }
+        }
+
+          stage('SonarQube Analysis') {
+            steps {
+                script {
+                    echo 'Running SonarQube analysis...'
+                    withCredentials([usernamePassword(credentialsId: "${SONARQUBE_CREDENTIALS}", usernameVariable: 'SONAR_USER', passwordVariable: 'SONAR_PASSWORD')]) {
+                        sh '''
+                            mvn clean verify sonar:sonar \
+                                -Dsonar.projectKey=DevopsSkiStation \
+                                -Dsonar.host.url=${SONARQUBE_URL} \
+                                -Dsonar.login=${SONAR_USER} \
+                                -Dsonar.password=${SONAR_PASSWORD}
+                        '''
+                    }
+                }
             }
         }
 
