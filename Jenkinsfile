@@ -7,13 +7,14 @@ pipeline {
 
     stages {
         // ℹ️ 0️⃣ Initialisation du fichier report.txt
-        stage('Initialize Report') {
-            steps {
-                script {
-                    sh 'echo "Build Report for ${env.JOB_NAME} #${env.BUILD_NUMBER}" > report.txt'
-                }
-            }
-        }
+      stage('Initialize Report') {
+          steps {
+              script {
+                  sh "echo \"Build Report for ${env.JOB_NAME} #${env.BUILD_NUMBER}\" > report.txt"
+              }
+          }
+      }
+
 
         // 1️⃣ Git
         stage('Git') {
