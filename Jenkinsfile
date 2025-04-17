@@ -150,6 +150,10 @@ stage('Generate PDF Report') {
                                                body: "Le pipeline a échoué. Veuillez trouver le rapport ci-joint.",
                                                attachmentsPattern: 'report.pdf'
                                       }
+
+
+
+                                      }
                                   }
 
                                   }
