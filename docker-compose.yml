@@ -8,7 +8,7 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/test_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: "root"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASS}"
-      JAVA_OPTS: "--add-opens java.base/java.io=ALL-UNNAMED"
+      JAVA_OPTS: "--add-opens java.base/java.io=ALL-UNNAMED"  # Ajout de l'option JVM
     depends_on:
       - mysql
     networks:
