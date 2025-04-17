@@ -49,17 +49,31 @@ pipeline {
             }
         }
 
-        // 5️⃣ Générer le rapport PDF depuis Sonar (option simple via wkhtmltopdf)
        stage('Generate SonarQube PDF') {
            steps {
                script {
-                   def reportUrl = "http://192.168.56.10:9000/project/overview?id=DevopsSkiStation"
-                   // Attendre plus longtemps pour que la page se charge
-                   sh "sleep 30" // Attendre 30 secondes, ajustez si nécessaire
-                   sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
+                   def reportUrl = "http://192.168.56.10:9000/dashboard?id=DevopsSkiStation"
+
+                   // 🔍 Vérifier si wkhtmltopdf est installé
+                   def isInstalled = sh(script: "which wkhtmltopdf", returnStatus: true) == 0
+
+                   if (isInstalled) {
+                       echo "✅ wkhtmltopdf est installé, génération du PDF en cours..."
+
+                       // ⏳ Attendre que la page soit bien accessible
+                       sh "sleep 30"
+
+                       // 📄 Générer le rapport PDF
+                       sh "wkhtmltopdf ${reportUrl} sonar-report.pdf"
+                       echo "📄 Rapport généré : sonar-report.pdf"
+
+                   } else {
+                       echo "❌ wkhtmltopdf n'est pas installé. Veuillez l'installer avec : sudo apt install wkhtmltopdf"
+                   }
                }
            }
        }
+
 
         // 6️⃣ Déploiement vers Nexus
         stage('Nexus') {
