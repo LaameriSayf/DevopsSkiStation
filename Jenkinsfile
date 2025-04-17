@@ -3,7 +3,7 @@ pipeline {
 
     environment {
     NEXUS_REPO = '192.168.33.10:8081'
-    IMAGE_NAME = 'eyachamekh/eyachamekh-g5-stationski'
+    IMAGE_NAME = 'eyachamekh-g5-stationski'
     IMAGE_TAG = 'latest'
     DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO}/"
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image..."
-                    sh 'docker build -t eyachamekh/eyachamekh-g5-stationski:latest .'
+                    sh 'docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} .'
                 }
             }
         }
