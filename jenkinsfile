@@ -455,8 +455,6 @@ pipeline {
                             cat docker-compose.yml
                             echo "Validation de docker-compose.yml..."
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
-                            echo "Arrêt de Docker Compose..."
-                            docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
@@ -489,8 +487,6 @@ pipeline {
                             cat docker-compose.yml
                             echo "Validation de docker-compose.yml..."
                             docker-compose config || echo "Erreur : échec de la validation Docker Compose" >&2
-                            echo "Arrêt de Docker Compose..."
-                            docker-compose down --volumes --remove-orphans || echo "Erreur : échec de docker-compose down" >&2
                             echo "Suppression du réseau mynetwork..."
                             docker network rm mynetwork || true
                             echo "Vérification des conteneurs restants..."
