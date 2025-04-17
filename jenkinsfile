@@ -4,7 +4,7 @@ pipeline {
     environment {
         DB_NAME = 'stationski'
         DB_USER = 'root'
-        DB_PASS = ''  // Définir un mot de passe sécurisé pour MySQL
+        DB_PASS = ''
         DB_PORT = '3306'
         MYSQL_CONTAINER = 'mysql-test'
     }
@@ -18,8 +18,7 @@ pipeline {
                         git branch: 'Halim', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Checkout : ${duration}s"
+                        echo "Durée de l'étape Checkout : ${(endTime - startTime) / 1000}s"
                     }
                 }
             }
@@ -31,7 +30,6 @@ pipeline {
                     def startTime = System.currentTimeMillis()
                     try {
                         sh '''
-                        set -e
                         echo "Vérification de Docker..."
                         whoami
                         docker version
@@ -39,8 +37,7 @@ pipeline {
                         '''
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Test Docker : ${duration}s"
+                        echo "Durée de l'étape Test Docker : ${(endTime - startTime) / 1000}s"
                     }
                 }
             }
@@ -54,8 +51,7 @@ pipeline {
                         sh 'mvn clean compile'
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Build : ${duration}s"
+                        echo "Durée de l'étape Build : ${(endTime - startTime) / 1000}s"
                     }
                 }
             }
@@ -66,14 +62,10 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
-                        sh '''
-                        echo "Exécution des tests avec couverture..."
-                        mvn test
-                        '''
+                        sh 'mvn test'
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime)
-                        echo "Durée de l'étape Test with Coverage : ${duration}ms"
+                        echo "Durée de l'étape Test with Coverage : ${(endTime - startTime)}ms"
                     }
                 }
             }
@@ -89,8 +81,7 @@ pipeline {
                         }
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape SonarQube Analysis : ${duration}s"
+                        echo "Durée de l'étape SonarQube Analysis : ${(endTime - startTime) / 1000}s"
                     }
                 }
             }
@@ -101,14 +92,10 @@ pipeline {
                 script {
                     def startTime = System.currentTimeMillis()
                     try {
-                        sh '''
-                        echo "Déploiement vers Nexus (tests ignorés)..."
-                        mvn deploy -DskipTests
-                        '''
+                        sh 'mvn deploy -DskipTests'
                     } finally {
                         def endTime = System.currentTimeMillis()
-                        def duration = (endTime - startTime) / 1000
-                        echo "Durée de l'étape Deploy to Nexus : ${duration}s"
+                        echo "Durée de l'étape Deploy to Nexus : ${(endTime - startTime) / 1000}s"
                     }
                 }
             }
@@ -116,19 +103,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                script {
-                    echo '🐳 Building Docker Image...'
-                    sh 'docker build -t halimtrabelsi/gestionstationski-app:0.0.1 .'
-                }
+                echo '🐳 Building Docker Image...'
+                sh 'docker build -t halimtrabelsi/gestionstationski-app:0.0.1 .'
             }
         }
 
         stage('List Docker Images') {
             steps {
-                script {
-                    echo '📦 Listing Docker Images...'
-                    sh 'docker images'
-                }
+                echo '📦 Listing Docker Images...'
+                sh 'docker images'
             }
         }
 
@@ -138,8 +121,9 @@ pipeline {
                     echo '🚀 Pushing Docker Image to DockerHub...'
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
                         sh '''
-                            echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push halimtrabelsi/gestionstationski-app:0.0.1
+                        echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push halimtrabelsi/gestionstationski-app:0.0.1
+                        docker logout
                         '''
                     }
                 }
@@ -148,10 +132,8 @@ pipeline {
 
         stage('Deploy with Docker Compose') {
             steps {
-                script {
-                    echo '🚀 Deploying with Docker Compose...'
-                    sh 'docker compose up -d'
-                }
+                echo '🚀 Deploying with Docker Compose...'
+                sh 'docker compose up -d'
             }
         }
     }
@@ -160,20 +142,15 @@ pipeline {
         success {
             emailext (
                 subject: "✅ Succès du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                <p>Le pipeline s'est terminé avec succès 🎉</p>
-                """,
+                body: "<p>Le pipeline s'est terminé avec succès 🎉</p>",
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
             )
         }
-
         failure {
             emailext (
                 subject: "❌ Échec du Pipeline: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                <p>Le pipeline a échoué 🚨</p>
-                """,
+                body: "<p>Le pipeline a échoué 🚨</p>",
                 mimeType: 'text/html',
                 to: 'halimtrabelsi73@gmail.com'
             )
