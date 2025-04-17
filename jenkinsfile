@@ -346,6 +346,88 @@ pipeline {
             }
         }
 
+        stage('Verify Spring Boot Prometheus Endpoint') {
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Attente que l'application Spring Boot soit prête (30 sec)..."
+                        sleep 30
+                        echo "Vérification de l'endpoint Prometheus de Spring Boot..."
+                        for i in {1..5}; do
+                            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/actuator/prometheus | grep -q "200"; then
+                                echo "L'endpoint Prometheus de Spring Boot est accessible (code HTTP : 200)"
+                                exit 0
+                            fi
+                            echo "L'endpoint n'est pas encore prêt, tentative $i/5..."
+                            sleep 10
+                        done
+                        echo "Échec : l'endpoint Prometheus de Spring Boot n'est pas accessible après 5 tentatives !"
+                        exit 1
+                        '''
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Verify Spring Boot Prometheus Endpoint'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Verify Spring Boot Prometheus Endpoint : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Restart Prometheus') {
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Redémarrage de Prometheus pour scraper les nouvelles métriques..."
+                        docker exec -it prometheus kill -HUP 1
+                        echo "Attente de 20 secondes pour que Prometheus scrape les métriques..."
+                        sleep 20
+                        '''
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Restart Prometheus'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Restart Prometheus : ${duration}s"
+                    }
+                }
+            }
+        }
+
+        stage('Verify Prometheus Status') {
+            steps {
+                script {
+                    def pipelineReport = readJSON file: env.pipelineReportFile
+                    def startTime = System.currentTimeMillis()
+                    try {
+                        sh '''
+                        set -e
+                        echo "Vérification de l'état de l'endpoint spring-boot dans Prometheus..."
+                        status=$(curl -s "http://localhost:9090/api/v1/query?query=up{job=\\"spring-boot\\"}" | jq -r '.data.result[0].value[1]')
+                        if [ "$status" = "1" ]; then
+                            echo "L'endpoint spring-boot est UP dans Prometheus."
+                        else
+                            echo "Erreur : l'endpoint spring-boot est DOWN dans Prometheus (valeur : $status) !"
+                            exit 1
+                        fi
+                        '''
+                    } finally {
+                        def duration = (System.currentTimeMillis() - startTime) / 1000
+                        pipelineReport['stages']['Verify Prometheus Status'] = duration
+                        writeJSON file: env.pipelineReportFile, json: pipelineReport
+                        echo "Durée de l'étape Verify Prometheus Status : ${duration}s"
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes with Helm') {
             steps {
                 script {
