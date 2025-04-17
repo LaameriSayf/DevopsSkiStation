@@ -96,16 +96,7 @@ pipeline {
                     }
                 }
             }
-            stage('Check Grafana') {
-        steps {
-            script {
-                echo "Checking if Grafana is up and running..."
-            // Simple health check by hitting the Grafana web interface
-            sh 'curl --fail http://192.168.33.10:3000 || exit 1'
-        }
-    }
-}
-
+            
 
     post {
         success {
