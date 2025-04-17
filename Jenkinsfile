@@ -25,7 +25,7 @@ pipeline {
                             echo "Removing existing DevopsSkiStation directory..."
                             rm -rf DevopsSkiStation
                         fi
-                        git clone --branch mahmoud https://github.com/LaameriSayf/DevopsSkiStation.git
+                        git clone --branch AbdulkareemMahmoud_4TWIN5_G https://github.com/LaameriSayf/DevopsSkiStation.git
                     '''
                 }
             }
