@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = '4twin5-g5-gestion-stationski'
-        IMAGE_NAME = 'abdulkareemmahmoud_g5_gestion-stationski'
+        PROJECT_NAME = '4TWIN5-G5-gestion-stationski'
+        IMAGE_NAME = 'mahmoudabdulkareem/AbdulkareemMahmoud_G5_gestion-stationski'
         IMAGE_TAG = 'latest'
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
@@ -46,7 +46,18 @@ pipeline {
             }
         }
 
-
+        stage('SonarQube') {
+            steps {
+                dir('DevopsSkiStation') {
+                    sh """
+                        mvn sonar:sonar \
+                          -Dsonar.projectKey=${PROJECT_NAME} \
+                          -Dsonar.host.url=${SONARQUBE_URL} \
+                          -Dsonar.login=${SONARQUBE_TOKEN}
+                    """
+                }
+            }
+        }
 
         stage('Deploy to Nexus') {
             steps {
