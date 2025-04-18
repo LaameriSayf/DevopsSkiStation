@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'mahmoudabdulkareem/gestion-stationski'
+        PROJECT_NAME = '4TWIN5-G5-gestion-stationski'
+        IMAGE_NAME = 'AbdulkareemMahmoud_G5_gestion-stationski'
         IMAGE_TAG = 'latest'
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
@@ -17,7 +18,6 @@ pipeline {
                 sh '''
                     rm -rf DevopsSkiStation || true
                     git clone --branch AbdulkareemMahmoud_4TWIN5_G https://github.com/LaameriSayf/DevopsSkiStation.git
-                    cd DevopsSkiStation
                 '''
             }
         }
@@ -51,7 +51,7 @@ pipeline {
                 dir('DevopsSkiStation') {
                     sh """
                         mvn sonar:sonar \
-                          -Dsonar.projectKey=gestion-stationski \
+                          -Dsonar.projectKey=${PROJECT_NAME} \
                           -Dsonar.host.url=${SONARQUBE_URL} \
                           -Dsonar.login=${SONARQUBE_TOKEN}
                     """
@@ -112,15 +112,15 @@ pipeline {
     post {
         success {
             emailext(
-                subject: " Pipeline Success - DevopsSkiStation",
-                body: "Pipeline completed successfully.\nProject: DevopsSkiStation\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
+                subject: "✅ Pipeline Success - ${PROJECT_NAME}",
+                body: "Pipeline completed successfully.\nProject: ${PROJECT_NAME}\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
                 to: 'negamex4274@gmail.com'
             )
         }
         failure {
             emailext(
-                subject: " Pipeline Failed - DevopsSkiStation",
-                body: "Pipeline failed.\nProject: DevopsSkiStation\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
+                subject: "❌ Pipeline Failed - ${PROJECT_NAME}",
+                body: "Pipeline failed.\nProject: ${PROJECT_NAME}\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
                 to: 'negamex4274@gmail.com'
             )
         }
