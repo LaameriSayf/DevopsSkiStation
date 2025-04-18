@@ -83,6 +83,9 @@ pipeline {
             steps {
                 dir('DevopsSkiStation') {
                     sh '''
+                docker rm -f mysqldb || true
+                docker rm -f nexus || true
+                docker rm -f jenkins || true
                 docker compose down || true
                 docker compose up -d
             '''
