@@ -7,7 +7,7 @@ pipeline {
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         SONARQUBE_URL = "http://192.168.33.10:9000"
-        SONARQUBE_TOKEN = 'squ_73d3f2da41714d87e5a87af105db49b1e7d72f23'
+        SONARQUBE_TOKEN = 'squ_7c92e6d1c16309ff7082a929b1985d5c1ca74a20'
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
 
