@@ -76,4 +76,4 @@ services:
 volumes:
   jenkins_home:
   nexus_data:
-  mysql_data:  # Persistent volume for MySQL
+  mysql_data:  

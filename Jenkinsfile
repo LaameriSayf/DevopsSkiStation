@@ -71,14 +71,14 @@ pipeline {
 
         stage('Deploy with Docker Compose') {
             steps {
-                echo '🚀 Deploying with Docker Compose...'
+                echo 'Deploying with Docker Compose...'
                 sh 'docker compose up -d'
             }
         }
 
-        stage('Mailing Test') {
+        stage('Mailing') {
             steps {
-                echo "✅ Envoi de mail de test réussi."
+                echo "✅ Mail sent."
                 emailext(
                     subject: "Test Email from Jenkins",
                     body: "This is a test email to ensure the mailing functionality is working in the Jenkins pipeline.",
@@ -90,18 +90,18 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline exécuté avec succès.'
+            echo '✅ Pipeline executed with succes.'
             emailext(
-                subject: "✅ Succès du Pipeline - DevopsSkiStation",
+                subject: "✅ Succes of Pipeline - DevopsSkiStation",
                 body: """
-                    Bonjour,
+                    Morning,
 
-                    Le pipeline Jenkins s’est exécuté avec succès. 🎉
+                    The pipeline Jenkins verified
 
-                    ✔ Projet : DevopsSkiStation
+                    ✔ Project : DevopsSkiStation
                     📅 Date : ${new Date()}
 
-                    Cordialement,
+                    sincerely,
                     Jenkins
                 """,
                 to: 'negamex4274@gmail.com'
@@ -113,16 +113,16 @@ pipeline {
             emailext(
                 subject: "❌ Échec du Pipeline - DevopsSkiStation",
                 body: """
-                    Bonjour,
+                    Morning,
 
-                    Le pipeline Jenkins a échoué. 🚨
+                    The pipeline Jenkins failed. 🚨
 
-                    ✔ Projet : DevopsSkiStation
+                    ✔ Project : DevopsSkiStation
                     📅 Date : ${new Date()}
 
-                    Merci de consulter Jenkins pour plus de détails.
+                    Consult Jenkins for more details.
 
-                    Cordialement,
+                    sincerely,
                     Jenkins
                 """,
                 to: 'negamex4274@gmail.com'
