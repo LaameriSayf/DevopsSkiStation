@@ -79,13 +79,17 @@ pipeline {
             }
         }
 
-        stage('Docker Compose Up') {
+       stage('Docker Compose Up') {
             steps {
                 dir('DevopsSkiStation') {
-                    sh 'docker compose up -d'
-                }
-            }
+                    sh '''
+                docker compose down || true
+                docker compose up -d
+            '''
         }
+    }
+}
+
 
         stage('Mail Test') {
             steps {
