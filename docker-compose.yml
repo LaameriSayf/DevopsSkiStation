@@ -6,7 +6,6 @@ services:
     image: mysql:5.7
     container_name: mysqldb
     environment:
-      - MYSQL_ROOT_PASSWORD="newpassword"  # Empty password for root user
       - MYSQL_DATABASE=stationSki
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     ports:
