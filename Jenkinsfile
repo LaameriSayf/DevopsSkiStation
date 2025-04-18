@@ -10,7 +10,7 @@ pipeline {
     NEXUS_HOST = '192.168.33.10'
     NEXUS_PORT = '8081'
     NEXUS_PROTOCOL = 'http'
-    NEXUS_REPO_NAME = 'maven-releases' // or maven-snapshots if you're pushing a snapshot
+    NEXUS_REPO_NAME = 'maven-releases'
     NEXUS_REPO_URL = "${NEXUS_PROTOCOL}://${NEXUS_HOST}:${NEXUS_PORT}/repository/${NEXUS_REPO_NAME}/"
     NEXUS_CREDENTIAL_ID = 'nexus'
      }
@@ -140,15 +140,4 @@ pipeline {
             """
                     }
                 }
-
-
-
-    post {
-        success {
-                echo "Pipeline execution finished successfully."
-        }
-        failure {
-                echo "Pipeline execution failed. Check logs for details."
-        }
-    }
 }
