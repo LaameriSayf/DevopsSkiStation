@@ -2,20 +2,20 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = '4twin5-g5-gestion-stationski'
-        IMAGE_NAME = 'abdulkareemmahmoud_g5_gestion-stationski'
+        PROJECT_NAME = '4TWIN5-G5-gestion-stationski'
+        IMAGE_NAME = 'mahmoudabdulkareem/abdulkareemmahmoud_g5_gestion-stationski'
         IMAGE_TAG = 'latest'
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         SONARQUBE_URL = "http://192.168.33.10:9000"
-        SONARQUBE_TOKEN = 'squ_1124f9454cb0bbaf5b31df5a8ca6ac146f6d68fe'
+        SONARQUBE_TOKEN = 'squ_7c92e6d1c16309ff7082a929b1985d5c1ca74a20'
+        DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
     }
 
     stages {
         stage('Clone') {
             steps {
                 sh '''
-                    echo "Cloning project..."
                     rm -rf DevopsSkiStation || true
                     git clone --branch AbdulkareemMahmoud_4TWIN5_G https://github.com/LaameriSayf/DevopsSkiStation.git
                 '''
@@ -46,17 +46,87 @@ pipeline {
             }
         }
 
-        stage('SonarQube') {
+ 
+
+
+
+        stage('Deploy to Nexus') {
             steps {
                 dir('DevopsSkiStation') {
+                    withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh "mvn deploy -DaltDeploymentRepository=nexus::default::${NEXUS_REPO_URL} -s .jenkins/settings.xml"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Image') {
+            steps {
+                dir('DevopsSkiStation') {
+                    echo 'Building Docker image...'
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Docker Hub') {
+            steps {
+                script {
+                    echo 'Logging into Docker Hub and pushing image...'
                     sh """
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=${PROJECT_NAME} \
-                          -Dsonar.host.url=${SONARQUBE_URL} \
-                          -Dsonar.login=${SONARQUBE_TOKEN}
+                        echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
             }
+        }
+
+       stage('Docker Compose Up') {
+            steps {
+                dir('DevopsSkiStation') {
+                    sh '''
+                echo "Cleaning up potential old containers..."
+                docker rm -f mysqldb || true
+                docker rm -f nexus || true
+                docker rm -f jenkins || true
+                docker rm -f gestionski || true
+
+                echo "Tearing down any old compose services..."
+                docker compose down || true
+
+                echo "Bringing up fresh containers..."
+                docker compose up -d
+            '''
+        }
+    }
+}
+
+
+        stage('Mail Test') {
+            steps {
+                emailext(
+                    subject: "Test Email",
+                    body: "Pipeline email test.",
+                    to: 'negamex4274@gmail.com'
+                )
+            }
+        }
+    }
+
+    post {
+        success {
+            emailext(
+                subject: "✅ Pipeline Success - ${PROJECT_NAME}",
+                body: "Pipeline completed successfully.\nProject: ${PROJECT_NAME}\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
+                to: 'negamex4274@gmail.com'
+            )
+        }
+        failure {
+            emailext(
+                subject: "❌ Pipeline Failed - ${PROJECT_NAME}",
+                body: "Pipeline failed.\nProject: ${PROJECT_NAME}\nBuild: ${env.BUILD_NUMBER}\nStatus: ${currentBuild.currentResult}",
+                to: 'negamex4274@gmail.com'
+            )
         }
     }
 }
