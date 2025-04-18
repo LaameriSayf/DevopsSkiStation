@@ -8,7 +8,7 @@ pipeline {
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         DOCKERHUB_CREDENTIALS = credentials('Docker_ID')
         SONARQUBE_URL = "http://192.168.33.10:9000"
-        SONARQUBE_ENV = 'SonarQube'
+        SONARQUBE_ENV = 'SonarQube_Credentials'
     }
 
     stages {
