@@ -93,7 +93,54 @@ pipeline {
             }
         }
 
+             stage('Mailing Test') {
+                        steps {
+                            echo " Envoi de mail de test réussi."
+                            mail to: 'chamekheya1@gmail.com',
+                                 subject: 'Test de Jenkins mail',
+                                 body: 'This is a plain Jenkins email using the basic "mail" step.'
+                        }
+                    }
+                }
 
+                post {
+                    success {
+                        echo ' Pipeline exécuté avec succès.'
+                        mail to: 'chamekheya1@gmail.com',
+                             subject: 'Succès du Pipeline - gestionski',
+                             body: """
+            Bonjour Eya,
+
+            Bravo, le pipeline Jenkins s’est exécuté avec succès. 🎉✅
+
+            ✔ Projet : gestionski
+            📅 Date : ${new Date()}
+
+            Cordialement,
+            Jenkins
+            """
+                    }
+
+                    failure {
+                        echo '❌ Le pipeline a échoué.'
+                        mail to: 'chamekheya1@gmail.com',
+                             subject: 'Échec du Pipeline - gestionski',
+                             body: """
+            Bonjour Eya,
+
+            Le pipeline Jenkins a échoué. 🚨
+
+            ✔ Projet : gestionski
+            📅 Date : ${new Date()}
+
+            Merci de consulter Jenkins pour plus de détails.
+
+            Cordialement,
+            Jenkins
+            """
+                    }
+                }
+            }
     }
 
     post {
