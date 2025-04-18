@@ -46,7 +46,7 @@ pipeline {
             }
         }
 
- 
+
 
 
 
@@ -85,16 +85,13 @@ pipeline {
             steps {
                 dir('DevopsSkiStation') {
                     sh '''
-                echo "Cleaning up potential old containers..."
                 docker rm -f mysqldb || true
                 docker rm -f nexus || true
                 docker rm -f jenkins || true
                 docker rm -f gestionski || true
 
-                echo "Tearing down any old compose services..."
                 docker compose down || true
 
-                echo "Bringing up fresh containers..."
                 docker compose up -d
             '''
         }
