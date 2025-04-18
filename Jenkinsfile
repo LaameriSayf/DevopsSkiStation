@@ -19,7 +19,7 @@ pipeline {
         stage('Git') {
             steps {
                 script {
-                    git branch: 'eya', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
+                    git branch: 'EyaChamekh_4TWIN5_G5', url: 'https://github.com/LaameriSayf/DevopsSkiStation.git'
                 }
             }
         }
