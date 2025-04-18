@@ -46,18 +46,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube') {
-            steps {
-                dir('DevopsSkiStation') {
-                    sh """
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=${PROJECT_NAME} \
-                          -Dsonar.host.url=${SONARQUBE_URL} \
-                          -Dsonar.login=${SONARQUBE_TOKEN}
-                    """
-                }
-            }
-        }
+       
 
         stage('Deploy to Nexus') {
             steps {
