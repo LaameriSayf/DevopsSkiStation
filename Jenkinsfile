@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         PROJECT_NAME = '4TWIN5-G5-gestion-stationski'
-        IMAGE_NAME = 'mahmoudabdulkareem/AbdulkareemMahmoud_G5_gestion-stationski'
+        IMAGE_NAME = 'mahmoudabdulkareem/abdulkareemmahmoud_g5_gestion-stationski'
         IMAGE_TAG = 'latest'
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
@@ -46,7 +46,7 @@ pipeline {
             }
         }
 
-       
+
 
         stage('Deploy to Nexus') {
             steps {
