@@ -8,7 +8,7 @@ pipeline {
         NEXUS_REPO_URL = "http://192.168.33.10:8081/repository/gestionski/"
         NEXUS_CREDENTIAL_ID = 'NEXUS_CREDENTIAL'
         SONARQUBE_URL = "http://192.168.33.10:9000"
-        SONARQUBE_TOKEN = 'squ_7c92e6d1c16309ff7082a929b1985d5c1ca74a20'
+        SONARQUBE_TOKEN = 'squ_1124f9454cb0bbaf5b31df5a8ca6ac146f6d68fe'
     }
 
     stages {
